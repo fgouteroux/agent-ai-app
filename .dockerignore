@@ -1,0 +1,12 @@
+.git
+.github
+.agents
+.codex
+node_modules
+coverage
+plugin-dist
+*.zip
+*.tar.gz
+.eslintcache
+.env
+.env.*

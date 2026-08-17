@@ -1,0 +1,15 @@
+services:
+  grafana:
+    image: grafana/grafana:12.3.1
+    container_name: agent-ai-app-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/var/lib/grafana/plugins/agent-ai-app:Z
+      - ../brain-agent:/var/lib/grafana/plugins/brain-agent:Z
+      - ./provisioning:/etc/grafana/provisioning:Z
+    environment:
+      - GF_DEFAULT_APP_MODE=development
+      - GF_LOG_LEVEL=debug
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=agent-ai-app,brain-agent
+      - GF_SECURITY_ADMIN_PASSWORD=admin

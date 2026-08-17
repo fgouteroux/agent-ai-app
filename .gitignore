@@ -1,0 +1,47 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.envrc
+.enrvrc
+.direnv/
+.agents/
+.codex/
+*.local
+*.secret
+*.secrets
+*secret*.local.yaml
+*secrets*.local.yaml
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+plugin-dist/
+coverage/
+*.tar.gz
+*.zip
+
+# Tool caches and reports
+.eslintcache
+.cache/
+.turbo/
+.act/
+coverage.out
+*.prof
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

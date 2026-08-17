@@ -1,0 +1,52 @@
+version: 2
+
+project_name: agent-ai-app
+
+builds:
+  - main: ./pkg
+    binary: "gpx_agent_ai_app_{{ .Os }}_{{ .Arch }}"
+    ldflags:
+      - -s -w
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    formats:
+      - zip
+      - tar.gz
+    wrap_in_directory: "agent-ai-app"
+    files:
+      - src: "plugin-dist/*.*"
+        dst: "."
+        strip_parent: true
+      - src: "plugin-dist/img/*"
+        dst: "img"
+        strip_parent: true
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  mode: replace
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch

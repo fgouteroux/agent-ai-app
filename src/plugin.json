@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "app",
+  "name": "Agent AI",
+  "id": "agent-ai-app",
+  "backend": true,
+  "executable": "gpx_agent_ai_app",
+  "preload": true,
+  "info": {
+    "keywords": ["ai", "assistant", "chat", "grafana", "metrics", "logs", "traces", "dashboards"],
+    "description": "AI assistant for Grafana that helps teams understand dashboards, investigate incidents, and analyze metrics, logs, traces, and alerts using live platform data, with customizable specialist agents.",
+    "author": {
+      "name": "Luis Correia"
+    },
+    "logos": {
+      "small": "img/logo-pixo-small.png",
+      "large": "img/logo-pixo-large.png"
+    },
+    "links": [
+      { "name": "Website", "url": "https://github.com/luiscorreiaops/agent-ai-app" },
+      { "name": "License", "url": "https://github.com/luiscorreiaops/agent-ai-app/blob/main/LICENSE" }
+    ],
+    "screenshots": [
+      { "name": "Chat", "path": "img/screenshots/chat-landing.png" },
+      { "name": "Custom specialist agents", "path": "img/screenshots/agents-page.png" },
+      { "name": "Panel menu integration", "path": "img/screenshots/panel-menu.png" },
+      { "name": "Configuration", "path": "img/screenshots/configuration-page.png" }
+    ],
+    "version": "1.0.0",
+    "updated": "2026-08-17"
+  },
+  "includes": [
+    {
+      "type": "page",
+      "name": "Chat",
+      "path": "/a/agent-ai-app/chat",
+      "role": "Viewer",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "page",
+      "name": "Agents",
+      "path": "/a/agent-ai-app/agents",
+      "role": "Admin",
+      "addToNav": true
+    },
+    {
+      "type": "page",
+      "name": "Configuration",
+      "path": "/plugins/agent-ai-app",
+      "role": "Admin",
+      "addToNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaDependency": ">=12.0.0",
+    "plugins": []
+  },
+  "extensions": {
+    "addedLinks": [
+      {
+        "targets": ["grafana/commandpalette/action"],
+        "title": "✨ Agent AI",
+        "description": "Open the Grafana assistant"
+      },
+      {
+        "targets": ["grafana/dashboard/panel/menu"],
+        "title": "✨ Ask Agent AI",
+        "description": "Ask the assistant about this panel -- uses the same chat and the same real tools (query_prometheus, query_loki, get_dashboard, etc.)"
+      }
+    ]
+  }
+}
