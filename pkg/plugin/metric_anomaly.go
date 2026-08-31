@@ -120,10 +120,21 @@ func valuesToFloats(values [][2]any) ([]int64, []float64) {
 		if err != nil {
 			continue
 		}
-		timestamps = append(timestamps, int64(ts))
+		if timestamp, ok := checkedFloatToInt64(ts); ok {
+			timestamps = append(timestamps, timestamp)
+		}
 		floats = append(floats, f)
 	}
 	return timestamps, floats
+}
+
+// checkedFloatToInt64 rejects values that cannot be represented as int64
+// before converting Prometheus' JSON timestamps from float64.
+func checkedFloatToInt64(value float64) (int64, bool) {
+	if math.IsNaN(value) || math.IsInf(value, 0) || value < -1<<63 || value >= 1<<63 {
+		return 0, false
+	}
+	return int64(value), true // #nosec G115 -- bounds are checked above
 }
 
 func meanAndStdDev(values []float64) (mean, stddev float64) {

@@ -189,7 +189,9 @@ func (te *ToolExecutor) analyzeCloudResource(ctx context.Context, arguments stri
 	for i := range values {
 		var t int64
 		if i < len(times) {
-			t = int64(times[i])
+			if timestamp, ok := checkedFloatToInt64(times[i]); ok {
+				t = timestamp
+			}
 		}
 		result.Datapoints = append(result.Datapoints, cloudResourceDatapoint{TimeUnixMs: t, Value: values[i]})
 	}
