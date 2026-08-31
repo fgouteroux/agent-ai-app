@@ -29,7 +29,7 @@ describe('contextService.getCurrentDashboard', () => {
   });
 
   it('returns {} without calling the API when there is no dashboard uid in the URL', async () => {
-    setPath('/a/agent-ai-app/chat');
+    setPath('/a/shortbobcat2735-agentai-app/chat');
     const result = await contextService.getCurrentDashboard();
     expect(result).toEqual({});
     expect(getMock).not.toHaveBeenCalled();

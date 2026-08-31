@@ -24,7 +24,7 @@ const config = (_env: Record<string, string>): Configuration => ({
     path: resolve(__dirname, 'dist'),
     publicPath: '',
     libraryTarget: 'amd',
-    uniqueName: 'agent-ai-app',
+    uniqueName: 'shortbobcat2735-agentai-app',
   },
   externals: [
     'lodash',

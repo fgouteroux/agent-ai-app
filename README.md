@@ -52,7 +52,7 @@ datasources, or other Grafana resources.
 | Long conversations | Older turns are summarized when the conversation approaches the model context limit; live context usage is shown in the UI. |
 | Optional memory | When Brain Agent is installed and enabled, Agent AI can search approved memories/runbooks and suggest new memories for admin review. |
 | Internet tools | Optional internet-backed search can be enabled for public documentation or product lookups; disable it for local-only operation. |
-| Usage metrics | `GET /api/plugins/agent-ai-app/resources/metrics` exposes Prometheus-format request, latency, and token metrics. |
+| Usage metrics | `GET /api/plugins/shortbobcat2735-agentai-app/resources/metrics` exposes Prometheus-format request, latency, and token metrics. |
 
 ## Specialist Agents / Subagents
 
@@ -196,4 +196,4 @@ See `docker-compose.yaml` and `provisioning/` for a local Grafana instance.
 
 ## License
 
-MIT -- see [LICENSE](LICENSE).
+MIT -- see [LICENSE](https://github.com/luiscorreiaops/agent-ai-app/blob/main/LICENSE).

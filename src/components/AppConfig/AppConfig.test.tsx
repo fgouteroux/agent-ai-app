@@ -58,7 +58,7 @@ async function renderConfig() {
 
 const mockPlugin = {
   meta: {
-    id: 'agent-ai-app',
+    id: 'shortbobcat2735-agentai-app',
     name: 'Agent AI Analysis',
     type: 'app' as const,
     module: '',

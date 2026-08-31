@@ -8,7 +8,7 @@
 // call in handleSend behind !isPanelPreview.
 
 const fakeHistory: { location: { pathname: string; search: string } } = {
-  location: { pathname: '/a/agent-ai-app/chat', search: '' },
+  location: { pathname: '/a/shortbobcat2735-agentai-app/chat', search: '' },
 };
 const historyListeners: Array<(upd: any) => void> = [];
 // "mock"-prefixed so Jest's factory-hoisting allows referencing it inside

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if err := app.Manage("agent-ai-app", plugin.NewApp, app.ManageOpts{}); err != nil {
+	if err := app.Manage("shortbobcat2735-agentai-app", plugin.NewApp, app.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error("Error running plugin", "error", err)
 		os.Exit(1)
 	}

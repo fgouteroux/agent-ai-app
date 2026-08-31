@@ -1,7 +1,7 @@
 apiVersion: 1
 
 apps:
-  - type: agent-ai-app
+  - type: shortbobcat2735-agentai-app
     org_id: 1
     disabled: false
     jsonData:

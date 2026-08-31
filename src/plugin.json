@@ -2,9 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "app",
   "name": "Agent AI",
-  "id": "agent-ai-app",
+  "id": "shortbobcat2735-agentai-app",
   "backend": true,
-  "executable": "gpx_agent_ai_app",
+  "executable": "gpx_shortbobcat2735_agentai_app",
   "preload": true,
   "info": {
     "keywords": ["ai", "assistant", "chat", "grafana", "metrics", "logs", "traces", "dashboards"],
@@ -33,7 +33,7 @@
     {
       "type": "page",
       "name": "Chat",
-      "path": "/a/agent-ai-app/chat",
+      "path": "/a/shortbobcat2735-agentai-app/chat",
       "role": "Viewer",
       "addToNav": true,
       "defaultNav": true
@@ -41,14 +41,14 @@
     {
       "type": "page",
       "name": "Agents",
-      "path": "/a/agent-ai-app/agents",
+      "path": "/a/shortbobcat2735-agentai-app/agents",
       "role": "Admin",
       "addToNav": true
     },
     {
       "type": "page",
       "name": "Configuration",
-      "path": "/plugins/agent-ai-app",
+      "path": "/plugins/shortbobcat2735-agentai-app",
       "role": "Admin",
       "addToNav": true
     }
@@ -61,7 +61,7 @@
     "addedLinks": [
       {
         "targets": ["grafana/commandpalette/action"],
-        "title": "✨ Agent AI",
+        "title": "✨ Ask Agent AI",
         "description": "Open the Grafana assistant"
       },
       {

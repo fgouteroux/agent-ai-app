@@ -1,5 +1,5 @@
 {
-  "extends": "@grafana/tsconfig",
+  "extends": "./.config/tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
