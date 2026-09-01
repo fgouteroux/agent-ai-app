@@ -1772,7 +1772,7 @@ func truncateString(s string, maxLen int) string {
 // readTokenFile reads a bearer token from a file, trimming whitespace.
 // Returns ("", nil) for empty files and ("", err) for read errors.
 func readTokenFile(path string) (string, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- admin-configured service-account token file path
 	if err != nil {
 		return "", err
 	}

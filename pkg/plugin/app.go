@@ -52,7 +52,7 @@ type App struct {
 	// chatQueueWaiting counts callers currently WAITING for a chat slot
 	// (not yet holding one) -- bounds queue depth independently of the
 	// wait-timeout, see tryAcquireChatSlotQueued.
-	chatQueueWaiting int32
+	chatQueueWaiting int64
 
 	// healthCache* memoize handleHealth's result for healthCacheTTL -- the
 	// UI's mount-time hook and every open tab hitting /resources/health at
@@ -183,11 +183,11 @@ func (a *App) tryAcquireChatSlotQueued(ctx context.Context) (release func(), ok 
 	if depth <= 0 {
 		return func() {}, false
 	}
-	if atomic.AddInt32(&a.chatQueueWaiting, 1) > int32(depth) {
-		atomic.AddInt32(&a.chatQueueWaiting, -1)
+	if atomic.AddInt64(&a.chatQueueWaiting, 1) > int64(depth) {
+		atomic.AddInt64(&a.chatQueueWaiting, -1)
 		return func() {}, false
 	}
-	defer atomic.AddInt32(&a.chatQueueWaiting, -1)
+	defer atomic.AddInt64(&a.chatQueueWaiting, -1)
 
 	timer := time.NewTimer(time.Duration(waitSeconds) * time.Second)
 	defer timer.Stop()

@@ -16,6 +16,6 @@ Initial public release.
 - Admin-configurable guardrails appended on top of the built-in safety rules.
 - Basic role-awareness (the assistant knows the requester's Grafana role) and settings-save conflict detection for safe multi-admin use.
 - Optional zero-config integrations with `grafana-llm-app`, if installed: an additional LLM provider fallback, and (opt-in, off by default) extra read-only tools from its bundled MCP server (OnCall, ClickHouse, CloudWatch, Elasticsearch, roles/permissions, Pyroscope, and more).
-- Requires Grafana >=12.0.0 -- Grafana 11 isn't supported (its plugin platform doesn't expose `react/jsx-runtime` as a shared module, which Grafana 13's React 19 runtime requires this plugin to use).
+- Requires Grafana 12 with a React 19-compatible shared JSX runtime patch: >=12.0.10 <12.1.0, >=12.1.7 <12.2.0, or >=12.2.5. Grafana 11 isn't supported.
 - Hardened against two real failure modes found live against a 14B-parameter model (qwen2.5:14b-instruct): a pseudo-tool-call JSON blob leaking into the visible response instead of executing, and a response answering in the wrong language entirely (not just switching mid-answer) relative to the user's prompt. Both are now detected and corrected (one bounded retry for the language case) rather than shown to the user as-is.
 - Fixed a real authorization-bypass vulnerability (GO-2026-4762) in a transitive gRPC dependency, found via `govulncheck` -- bumped `google.golang.org/grpc` to the patched version.
