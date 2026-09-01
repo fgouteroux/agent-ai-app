@@ -819,6 +819,7 @@ export function AppConfig({ plugin }: Props) {
                   { label: 'Português', value: 'portuguese' },
                   { label: 'Español', value: 'spanish' },
                   { label: '中文', value: 'chinese' },
+                  { label: 'Français', value: 'french' },
                 ]}
                 value={state.responseLanguage}
                 onChange={onChangeResponseLanguage}
