@@ -30,6 +30,8 @@ func responseLanguageName(lang string) string {
 		return "Spanish"
 	case "chinese":
 		return "Chinese"
+	case "french":
+		return "French"
 	default:
 		return "English"
 	}
