@@ -7,7 +7,16 @@
   "executable": "gpx_shortbobcat2735_agentai_app",
   "preload": true,
   "info": {
-    "keywords": ["ai", "assistant", "chat", "grafana", "metrics", "logs", "traces", "dashboards"],
+    "keywords": [
+      "ai",
+      "assistant",
+      "chat",
+      "grafana",
+      "metrics",
+      "logs",
+      "traces",
+      "dashboards"
+    ],
     "description": "AI assistant for Grafana that helps teams understand dashboards, investigate incidents, and analyze metrics, logs, traces, and alerts using live platform data, with customizable specialist agents.",
     "author": {
       "name": "Luis Correia"
@@ -17,14 +26,32 @@
       "large": "img/logo-pixo-large.png"
     },
     "links": [
-      { "name": "Website", "url": "https://github.com/luiscorreiaops/agent-ai-app" },
-      { "name": "License", "url": "https://github.com/luiscorreiaops/agent-ai-app/blob/main/LICENSE" }
+      {
+        "name": "Website",
+        "url": "https://github.com/luiscorreiaops/agent-ai-app"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/luiscorreiaops/agent-ai-app/blob/main/LICENSE"
+      }
     ],
     "screenshots": [
-      { "name": "Chat", "path": "img/screenshots/chat-landing.png" },
-      { "name": "Custom specialist agents", "path": "img/screenshots/agents-page.png" },
-      { "name": "Panel menu integration", "path": "img/screenshots/panel-menu.png" },
-      { "name": "Configuration", "path": "img/screenshots/configuration-page.png" }
+      {
+        "name": "Chat",
+        "path": "img/screenshots/chat-landing.png"
+      },
+      {
+        "name": "Custom specialist agents",
+        "path": "img/screenshots/agents-page.png"
+      },
+      {
+        "name": "Panel menu integration",
+        "path": "img/screenshots/panel-menu.png"
+      },
+      {
+        "name": "Configuration",
+        "path": "img/screenshots/configuration-page.png"
+      }
     ],
     "version": "1.0.0",
     "updated": "2026-08-17"
@@ -60,14 +87,32 @@
   "extensions": {
     "addedLinks": [
       {
-        "targets": ["grafana/commandpalette/action"],
+        "targets": [
+          "grafana/commandpalette/action"
+        ],
         "title": "✨ Ask Agent AI",
         "description": "Open the Grafana assistant"
       },
       {
-        "targets": ["grafana/dashboard/panel/menu"],
+        "targets": [
+          "grafana/dashboard/panel/menu"
+        ],
         "title": "✨ Ask Agent AI",
         "description": "Ask the assistant about this panel -- uses the same chat and the same real tools (query_prometheus, query_loki, get_dashboard, etc.)"
+      },
+      {
+        "targets": [
+          "grafana/dashboard/panel/menu"
+        ],
+        "title": "✨ Ask Agent AI in a side panel",
+        "description": "Open the assistant docked to the right so the dashboard stays visible and usable while you ask about this panel."
+      },
+      {
+        "targets": [
+          "grafana/commandpalette/action"
+        ],
+        "title": "✨ Agent AI in a side panel",
+        "description": "Dock the assistant to the right of the screen and keep navigating Grafana while you chat."
       }
     ]
   }

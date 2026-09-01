@@ -300,8 +300,13 @@ func (a *App) handleLimits(w http.ResponseWriter, _ *http.Request) {
 	if a.settings.EnableDashboardIntegration != nil {
 		dashboardIntegration = *a.settings.EnableDashboardIntegration
 	}
+	sideRail := false
+	if a.settings.EnableSideRail != nil {
+		sideRail = *a.settings.EnableSideRail
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"attachmentMaxBytes":         attachmentMaxBytes(a.settings),
+		"enableSideRail":             sideRail,
 		"maxAttachments":             maxAttachmentsPerMessage,
 		"maxAttachmentsTotalBytes":   maxAttachmentsTotalBytes(),
 		"enableStandaloneChat":       standaloneChat,
