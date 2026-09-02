@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import * as ReactDOM from "react-dom";
 import type { Root } from "react-dom/client";
 import { GrafanaTheme2, PluginExtensionPanelContext } from "@grafana/data";
@@ -125,6 +125,56 @@ function getCreateRoot(): Promise<CreateRoot> {
 }
 
 
+/**
+ * Where Grafana's own top chrome ends, in viewport pixels.
+ *
+ * The panel is fixed to the edge, so at `top: 0` its header slides under the
+ * dashboard toolbar -- the time range picker and the Edit button, which
+ * Grafana renders into that same top bar. Raising the panel's z-index instead
+ * would only reverse the problem, covering the very controls this panel
+ * exists to keep reachable.
+ *
+ * Grafana puts all of that chrome (breadcrumbs plus, on dashboards, the
+ * toolbar row) inside a single `<header>`, with the page below it as
+ * `<main id="pageContent">`. That element's top is therefore exactly where
+ * the chrome ends -- with one toolbar row or two, and 0 in kiosk mode, where
+ * there is no header at all. Measured rather than hardcoded: none of these
+ * heights is a constant Grafana exposes.
+ */
+function measureChromeOffset(): number {
+  const main = document.getElementById("pageContent");
+  const top = main?.getBoundingClientRect().top ?? 0;
+  // Clamped: a transient layout (a page mid-transition) must not push the
+  // panel off-screen, and a negative top would hide its header.
+  return Number.isFinite(top) ? Math.min(Math.max(top, 0), 300) : 0;
+}
+
+function useChromeOffset(): number {
+  const [offset, setOffset] = useState(measureChromeOffset);
+  useLayoutEffect(() => {
+    const measure = () => setOffset(measureChromeOffset());
+    measure();
+    window.addEventListener("resize", measure);
+    // The chrome also changes height without the window resizing: kiosk mode
+    // toggled, a second toolbar row appearing, a page with a taller header.
+    // Watching <main> catches all of those, since it grows exactly as much as
+    // the header shrinks.
+    const main = document.getElementById("pageContent");
+    const observer =
+      main && typeof ResizeObserver === "function"
+        ? new ResizeObserver(measure)
+        : undefined;
+    if (main && observer) {
+      observer.observe(main);
+    }
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer?.disconnect();
+    };
+  }, []);
+  return offset;
+}
+
 interface SidePanelProps {
   /** Start collapsed: the permanent tab shows, and the chat only expands on
    *  click. */
@@ -146,6 +196,7 @@ function SidePanel({
   const [width, setWidth] = useState(storedWidth);
   const [collapsed, setCollapsed] = useState(Boolean(startCollapsed));
   const [side, setSide] = useState<PanelSide>(storedSide);
+  const chromeOffset = useChromeOffset();
 
   const flipSide = useCallback(() => {
     setSide((current) => {
@@ -221,6 +272,7 @@ function SidePanel({
         style={{
           width,
           [side]: 0,
+          top: chromeOffset,
           display: collapsed ? "none" : "flex",
         }}
         aria-label="Agent AI"
