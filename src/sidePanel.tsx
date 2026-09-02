@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import { createRoot, Root } from "react-dom/client";
+import * as ReactDOM from "react-dom";
+import type { Root } from "react-dom/client";
 import { GrafanaTheme2, PluginExtensionPanelContext } from "@grafana/data";
 import { config } from "@grafana/runtime";
 import { Icon, IconButton, ThemeContext, useStyles2 } from "@grafana/ui";
@@ -68,6 +69,61 @@ function storedSide(): PanelSide {
 
 let root: Root | undefined;
 let container: HTMLElement | undefined;
+
+type CreateRoot = (container: Element | DocumentFragment) => Root;
+
+/**
+ * React 18 (Grafana 12) still exposed `createRoot` on the `react-dom` entry
+ * itself; React 19 (Grafana 13) removed it and left it only in
+ * `react-dom/client`.
+ *
+ * Bundling `react-dom/client` is not a way out: the published entry is a
+ * two-line shim that re-exports `react-dom`'s own `createRoot`, which is
+ * exactly what React 19 dropped -- hence "createRoot is not a function" on
+ * Grafana 13, with no build-time warning of any kind.
+ *
+ * Grafana 13 does share the real module (its `sharedDependencies.ts` maps
+ * `react-dom/client` into the SystemJS import map), but Grafana 12 does not,
+ * and an `import` of it compiles to a hard AMD dependency that would fail the
+ * whole plugin there. So the module is resolved at runtime instead: ask
+ * `react-dom` first, and fall back to the shared module only when it has no
+ * `createRoot` of its own.
+ */
+let createRootPromise: Promise<CreateRoot> | undefined;
+
+function getCreateRoot(): Promise<CreateRoot> {
+  if (!createRootPromise) {
+    const fromReactDom = (ReactDOM as unknown as { createRoot?: CreateRoot })
+      .createRoot;
+    if (typeof fromReactDom === "function") {
+      createRootPromise = Promise.resolve(fromReactDom);
+    } else {
+      // `window.System` is SystemJS, which Grafana itself uses to load
+      // plugins -- so by the time this code runs it is necessarily there.
+      // Guarded all the same: a future loader change would otherwise surface
+      // as an unreadable "cannot read property import of undefined".
+      const system = (
+        window as unknown as {
+          System?: { import(id: string): Promise<unknown> };
+        }
+      ).System;
+      createRootPromise = system
+        ? system.import("react-dom/client").then((module) => {
+            const createRoot = (module as { createRoot?: CreateRoot })
+              .createRoot;
+            if (typeof createRoot !== "function") {
+              throw new Error("react-dom/client exposes no createRoot");
+            }
+            return createRoot;
+          })
+        : Promise.reject(
+            new Error("no react-dom.createRoot and no SystemJS to load it"),
+          );
+    }
+  }
+  return createRootPromise;
+}
+
 
 interface SidePanelProps {
   /** Start collapsed: the permanent tab shows, and the chat only expands on
@@ -237,6 +293,29 @@ export function openSidePanel(
   panelContext: Readonly<PluginExtensionPanelContext> | undefined,
   responseLanguage: unknown,
   startCollapsed = false,
+) {
+  // Resolved before anything is torn down, so a loader failure leaves the
+  // panel that is already open untouched instead of closing it for a
+  // replacement that never arrives.
+  getCreateRoot()
+    .then((createRoot) => {
+      mountSidePanel(
+        createRoot,
+        panelContext,
+        responseLanguage,
+        startCollapsed,
+      );
+    })
+    .catch((error) => {
+      console.error("Agent AI: cannot open the side panel", error);
+    });
+}
+
+function mountSidePanel(
+  createRoot: CreateRoot,
+  panelContext: Readonly<PluginExtensionPanelContext> | undefined,
+  responseLanguage: unknown,
+  startCollapsed: boolean,
 ) {
   // Reopening from another panel replaces the content instead of stacking
   // two panels on top of each other.
