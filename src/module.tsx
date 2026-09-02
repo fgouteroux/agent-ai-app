@@ -8,6 +8,7 @@ import { getStyles as getChatInterfaceStyles } from './components/features/ChatI
 import { PLUGIN_ID } from './constants';
 import { fetchLimits, type Limits } from './api/client';
 import { normalizeResponseLanguage } from './services/landingText';
+import { openSidePanel } from './sidePanel';
 
 const DEFAULT_LIMITS: Limits = {
   attachmentMaxBytes: 51200,
@@ -16,6 +17,7 @@ const DEFAULT_LIMITS: Limits = {
   auditLogFullContent: false,
   responseLanguage: 'english',
   maintenanceMode: false,
+  enableSideRail: false,
 };
 
 // Fetched once at module load, not per-render -- extension `configure`
@@ -30,7 +32,16 @@ const DEFAULT_LIMITS: Limits = {
 // configure() callbacks that have no other way to reach the real value.
 let cachedLimits: Limits = DEFAULT_LIMITS;
 fetchLimits()
-  .then((limits) => { cachedLimits = limits; })
+  .then((limits) => {
+    cachedLimits = limits;
+    // Permanent edge tab, when the admin enabled it. Mounted here, at module
+    // load, because this is the only plugin code that runs whatever the page
+    // is -- an app page would only run on its own route. Started collapsed:
+    // the chat only expands on click.
+    if (limits.enableSideRail && limits.enableStandaloneChat) {
+      openSidePanel(undefined, limits.responseLanguage, true);
+    }
+  })
   .catch(() => {});
 
 function DisabledNotice({ feature }: { feature: string }) {
@@ -154,6 +165,20 @@ export const plugin = new AppPlugin<{}>()
     path: `/a/${PLUGIN_ID}/chat`,
     configure: () => (cachedLimits.enableStandaloneChat ? {} : undefined),
   })
+  // Same chat as the dedicated page, docked to the edge instead of taking
+  // the screen: mounted into document.body, so outside Grafana's React tree,
+  // it survives navigation and stays open from dashboard to dashboard. No
+  // panel context here -- this is a free-form conversation.
+  .addLink({
+    title: '✨ Agent AI in a side panel',
+    description: 'Dock the assistant to the right of the screen and keep navigating Grafana while you chat.',
+    targets: [PluginExtensionPoints.CommandPalette],
+    icon: 'web-section-alt',
+    configure: () => (cachedLimits.enableStandaloneChat ? {} : undefined),
+    onClick: () => {
+      openSidePanel(undefined, cachedLimits.responseLanguage);
+    },
+  })
   .addLink<PluginExtensionPanelContext>({
     // Grafana's panel-menu "Extensions" submenu doesn't render the `icon`
     // prop for per-plugin items (confirmed empirically) -- a symbol in the
@@ -194,5 +219,22 @@ export const plugin = new AppPlugin<{}>()
         // it size to its actual content (containerPreview caps it at 80vh
         // and scrolls beyond that) so it only grows as the answer streams in.
       });
+    },
+  })
+  // Same context, different presentation: docked and unmasked, so the
+  // dashboard stays visible and usable during the exchange. A separate entry
+  // rather than a setting -- the choice depends on what you are doing right
+  // then, not on a lasting preference.
+  .addLink<PluginExtensionPanelContext>({
+    title: '✨ Ask Agent AI in a side panel',
+    description:
+      'Open the assistant docked to the right so the dashboard stays visible and usable while you ask about this panel.',
+    targets: [PluginExtensionPoints.DashboardPanelMenu],
+    icon: 'web-section-alt',
+    configure: () => (cachedLimits.enableDashboardIntegration ? {} : undefined),
+    onClick: (_event, helpers) => {
+      if (helpers.context) {
+        openSidePanel(helpers.context, cachedLimits.responseLanguage);
+      }
     },
   });

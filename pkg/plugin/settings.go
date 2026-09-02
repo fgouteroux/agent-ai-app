@@ -72,25 +72,30 @@ type Settings struct {
 	AllowedDatasourceUIDs              []string           `json:"allowedDatasourceUIDs,omitempty"`
 	AttachmentMaxBytes                 int                `json:"attachmentMaxBytes,omitempty"`
 	EnableStandaloneChat               *bool              `json:"enableStandaloneChat,omitempty"`
-	EnableDashboardIntegration         *bool              `json:"enableDashboardIntegration,omitempty"`
-	MaintenanceMode                    bool               `json:"maintenanceMode,omitempty"`
-	FastMode                           bool               `json:"fastMode,omitempty"`
-	CustomGuardrails                   string             `json:"customGuardrails,omitempty"`
-	ResponseLanguage                   string             `json:"responseLanguage,omitempty"`
-	DisableGuardrailsForDebug          bool               `json:"disableGuardrailsForDebug,omitempty"`
-	FallbackProviders                  []FallbackProvider `json:"fallbackProviders,omitempty"`
-	FallbackAPIKeys                    []string           `json:"-"`
-	AuditLogFullContent                bool               `json:"auditLogFullContent,omitempty"`
-	EnableLLMAppIntegration            *bool              `json:"enableLLMAppIntegration,omitempty"`
-	EnableBrainAgentTools              *bool              `json:"enableBrainAgentTools,omitempty"`
-	EnableMemoryPrefetch               *bool              `json:"enableMemoryPrefetch,omitempty"`
-	EnableInternetTools                *bool              `json:"enableInternetTools,omitempty"`
-	OnlineSearchBackend                string             `json:"onlineSearchBackend,omitempty"`
-	SearchGatewayURL                   string             `json:"searchGatewayURL,omitempty"`
-	SearxngURL                         string             `json:"searxngURL,omitempty"`
-	OnlineSearchMaxResults             int                `json:"onlineSearchMaxResults,omitempty"`
-	OnlineSearchTimeoutSeconds         int                `json:"onlineSearchTimeoutSeconds,omitempty"`
-	SearchGatewayToken                 string             `json:"-"`
+	// EnableSideRail shows a permanent tab on the screen edge that expands
+	// the docked chat. Off by default: unlike the panel menu or the command
+	// palette, this is UI shown to everyone in the org rather than an action
+	// they trigger, so it is the admin's call.
+	EnableSideRail             *bool              `json:"enableSideRail,omitempty"`
+	EnableDashboardIntegration *bool              `json:"enableDashboardIntegration,omitempty"`
+	MaintenanceMode            bool               `json:"maintenanceMode,omitempty"`
+	FastMode                   bool               `json:"fastMode,omitempty"`
+	CustomGuardrails           string             `json:"customGuardrails,omitempty"`
+	ResponseLanguage           string             `json:"responseLanguage,omitempty"`
+	DisableGuardrailsForDebug  bool               `json:"disableGuardrailsForDebug,omitempty"`
+	FallbackProviders          []FallbackProvider `json:"fallbackProviders,omitempty"`
+	FallbackAPIKeys            []string           `json:"-"`
+	AuditLogFullContent        bool               `json:"auditLogFullContent,omitempty"`
+	EnableLLMAppIntegration    *bool              `json:"enableLLMAppIntegration,omitempty"`
+	EnableBrainAgentTools      *bool              `json:"enableBrainAgentTools,omitempty"`
+	EnableMemoryPrefetch       *bool              `json:"enableMemoryPrefetch,omitempty"`
+	EnableInternetTools        *bool              `json:"enableInternetTools,omitempty"`
+	OnlineSearchBackend        string             `json:"onlineSearchBackend,omitempty"`
+	SearchGatewayURL           string             `json:"searchGatewayURL,omitempty"`
+	SearxngURL                 string             `json:"searxngURL,omitempty"`
+	OnlineSearchMaxResults     int                `json:"onlineSearchMaxResults,omitempty"`
+	OnlineSearchTimeoutSeconds int                `json:"onlineSearchTimeoutSeconds,omitempty"`
+	SearchGatewayToken         string             `json:"-"`
 	// GrafanaTokenPath is intentionally json:"-" and extracted manually from
 	// raw jsonData, so it can be used without being serialized back out.
 	GrafanaTokenPath string `json:"-"`

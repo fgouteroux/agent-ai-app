@@ -161,6 +161,8 @@ interface JsonData {
   enableDashboardIntegration?: boolean;
   /** Shows a maintenance notice instead of the real chat on the standalone chat page -- see module.tsx's AppRoot. */
   maintenanceMode?: boolean;
+  /** Permanent tab on the screen edge that expands the docked chat, on every page. Off by default -- see src/sidePanel.tsx. */
+  enableSideRail?: boolean;
   customGuardrails?: string;
   /** Default reply language when the user's message doesn't explicitly request a different one -- 'english' (default), 'portuguese', or 'spanish'. See pkg/plugin/guardrails.go's languageDirective. */
   responseLanguage?: string;
@@ -237,6 +239,7 @@ export function AppConfig({ plugin }: Props) {
     // sizing a text/config/log snippet or a small screenshot.
     attachmentMaxKB: Math.round((jsonData.attachmentMaxBytes || 51200) / 1024),
     enableStandaloneChat: jsonData.enableStandaloneChat ?? true,
+    enableSideRail: jsonData.enableSideRail ?? false,
     enableDashboardIntegration: jsonData.enableDashboardIntegration ?? true,
     maintenanceMode: jsonData.maintenanceMode ?? false,
     customGuardrails: jsonData.customGuardrails || '',
@@ -424,6 +427,7 @@ export function AppConfig({ plugin }: Props) {
           rateLimitMaxRetries: state.rateLimitMaxRetries,
           attachmentMaxBytes: state.attachmentMaxKB * 1024,
           enableStandaloneChat: state.enableStandaloneChat,
+          enableSideRail: state.enableSideRail,
           enableDashboardIntegration: state.enableDashboardIntegration,
           maintenanceMode: state.maintenanceMode,
           customGuardrails: state.customGuardrails,
@@ -848,6 +852,13 @@ export function AppConfig({ plugin }: Props) {
                 onChange={onChangeAllowedDatasourceUIDs}
                 placeholder="e.g. prometheus-prod, loki-prod"
               />
+            </Field>
+
+            <Field
+              label="Side tab on every page"
+              description="Shows a small permanent tab on the edge of the screen that expands the assistant docked to the side, keeping it reachable from any page while you navigate. Off by default: unlike the panel menu or command palette, this is UI shown to everyone in the org, not an action they trigger. The tab sits on whichever side each user last moved the panel to."
+            >
+              <Switch value={state.enableSideRail} onChange={onChangeBool('enableSideRail')} />
             </Field>
 
             <Field
