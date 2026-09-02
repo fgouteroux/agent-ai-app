@@ -176,6 +176,8 @@ interface JsonData {
   responseLanguage?: string;
   /** Restricts every tool call to these datasource UIDs. Empty = unrestricted. Enforced in the backend (resolveDatasourceUID), never in the prompt -- see pkg/plugin/tool_executor.go. */
   allowedDatasourceUIDs?: string[];
+  /** Internal URL the plugin backend uses to reach the Grafana API. Defaults to http://localhost:3000, which is wrong on any install listening elsewhere -- see pkg/plugin/settings.go. */
+  grafanaURL?: string;
   fallbackProviders?: FallbackProviderJsonData[];
   auditLogFullContent?: boolean;
   /** Whether this plugin may automatically use grafana-llm-app (if installed and configured) as an LLM provider -- see pkg/plugin/llmapp.go. */
@@ -266,6 +268,7 @@ export function AppConfig({ plugin }: Props) {
     // Edited as a comma-separated list: a rarely touched admin field, not
     // worth a picker that would have to load and track every datasource.
     allowedDatasourceUIDs: (jsonData.allowedDatasourceUIDs || []).join(', '),
+    grafanaURL: jsonData.grafanaURL || '',
     auditLogFullContent: jsonData.auditLogFullContent ?? false,
     restrictSpecialistAgentsForViewers: jsonData.restrictSpecialistAgentsForViewers ?? false,
     enableLLMAppIntegration: jsonData.enableLLMAppIntegration ?? true,
@@ -370,6 +373,10 @@ export function AppConfig({ plugin }: Props) {
     setState({ ...state, allowedDatasourceUIDs: event.target.value });
   };
 
+  const onChangeGrafanaURL = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setState({ ...state, grafanaURL: event.target.value });
+  };
+
   const onChangeResponseLanguage = (value: string) => {
     setState({ ...state, responseLanguage: value });
   };
@@ -459,6 +466,9 @@ export function AppConfig({ plugin }: Props) {
             .split(',')
             .map((uid) => uid.trim())
             .filter(Boolean),
+          // Sent trimmed and only when set, so an empty field keeps the
+          // backend's own default rather than storing a blank string.
+          ...(state.grafanaURL.trim() ? { grafanaURL: state.grafanaURL.trim() } : {}),
           fallbackProviders: state.fallbackProviders.map((fp) => ({ endpointURL: fp.endpointURL, model: fp.model })),
           auditLogFullContent: state.auditLogFullContent,
           restrictSpecialistAgentsForViewers: state.restrictSpecialistAgentsForViewers,
@@ -735,6 +745,19 @@ export function AppConfig({ plugin }: Props) {
 
         {showGrafanaIntegrations && (
           <>
+            <Field
+              label="Grafana URL"
+              description="Where this plugin's backend reaches the Grafana API. Leave empty for http://localhost:3000, which is right for a default install. Set it when Grafana listens on another port or address (http_port/http_addr), serves HTTPS, or runs in a container the plugin resolves by another name. This is the internal address the backend connects to, not the public root_url your users see."
+            >
+              <Input
+                aria-label="Grafana URL"
+                value={state.grafanaURL}
+                onChange={onChangeGrafanaURL}
+                placeholder="http://localhost:3000"
+                width={40}
+              />
+            </Field>
+
             <Field
               label="Grafana Service Account Token"
               description={
