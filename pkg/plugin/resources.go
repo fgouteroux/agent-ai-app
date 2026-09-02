@@ -26,6 +26,13 @@ type ChatRequest struct {
 	Context     json.RawMessage  `json:"context"`
 	Messages    []ChatMessage    `json:"messages,omitempty"`
 	Attachments []ChatAttachment `json:"attachments,omitempty"`
+	// Interactive is true when the user has an input box and can reply --
+	// the standalone chat and the docked side panel. The panel-menu modal
+	// is a one-shot preview with none, which the explain_panel prompt
+	// states outright; without this flag it stated it of the side panel
+	// too, telling the model the user could not answer a question they
+	// were perfectly able to answer.
+	Interactive bool `json:"interactive,omitempty"`
 }
 
 // ChatAttachment is a single file the user attached to their message --

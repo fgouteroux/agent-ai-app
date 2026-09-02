@@ -68,6 +68,12 @@ export interface ChatRequest {
   agent?: string;
   prompt: string;
   context: AnalysisContext;
+  /** True when the user has an input box and CAN reply -- the standalone
+   * chat and the docked side panel. The panel-menu modal is a one-shot
+   * preview with no input, and the explain_panel system prompt tells the
+   * model exactly that, so it must not claim the same of a conversation the
+   * user can actually continue. */
+  interactive?: boolean;
   messages?: Array<{ role: string; content: string }>;
   attachments?: ChatAttachment[];
 }

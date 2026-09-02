@@ -242,6 +242,32 @@ describe('ChatInterface -- analysis context no longer floods every message with 
     const context = streamChatMock.mock.calls[0][2];
     expect(context.datasources).toEqual([{ name: 'Prometheus', type: 'prometheus', uid: 'prom-uid' }]);
   });
+
+  // The backend's explain_panel prompt states outright that the user cannot
+  // reply, which is true of the modal and false of the side panel. The flag
+  // that tells the two apart is the 8th argument of streamChat.
+  it('tells the backend whether the user can actually reply', async () => {
+    const panelContext = {
+      pluginId: 'test-datasource',
+      title: 'Error rate',
+      dashboard: { uid: 'dash-1', title: 'Test dashboard' },
+      targets: [],
+      timeRange: { from: 'now-6h', to: 'now' },
+    } as unknown as PluginExtensionPanelContext;
+
+    await act(async () => {
+      render(<ChatInterface panelContext={panelContext} onDismiss={jest.fn()} />);
+    });
+    await waitFor(() => expect(streamChatMock).toHaveBeenCalled());
+    expect(streamChatMock.mock.calls[0][7]).toBe(false);
+
+    streamChatMock.mockClear();
+    await act(async () => {
+      render(<ChatInterface panelContext={panelContext} onDismiss={jest.fn()} allowFollowUp />);
+    });
+    await waitFor(() => expect(streamChatMock).toHaveBeenCalled());
+    expect(streamChatMock.mock.calls[0][7]).toBe(true);
+  });
 });
 
 // Regression tests for MELHORIA-PERFORMANCE-PRODUCAO.md item 6: the UI only

@@ -72,7 +72,7 @@ func (a *App) streamChatCompletion(ctx context.Context, req ChatRequest, sender 
 			brainAgentState = brainAgentIntegrationOff
 		}
 	}
-	systemPrompt := buildSystemPrompt(req.Mode, agent, req.Context, a.settings.FastMode, a.settings.AgentContexts, a.settings.AgentLabels, resolveAgentActiveCount(a.settings.AgentActiveCount), a.settings.CustomGuardrails, a.settings.ResponseLanguage, a.settings.DisableGuardrailsForDebug, requesterRole(ctx), grafanaVersion, brainAgentState, brainAgentVersion)
+	systemPrompt := buildSystemPrompt(req.Mode, agent, req.Context, a.settings.FastMode, a.settings.AgentContexts, a.settings.AgentLabels, resolveAgentActiveCount(a.settings.AgentActiveCount), a.settings.CustomGuardrails, a.settings.ResponseLanguage, a.settings.DisableGuardrailsForDebug, requesterRole(ctx), grafanaVersion, brainAgentState, brainAgentVersion, withInteractiveChat(req.Interactive))
 	systemPrompt += "\n\n" + internetToolsPromptAddition(a.internetToolState(ctx))
 	systemPrompt += a.prefetchMemoryContext(ctx, req.Context)
 
