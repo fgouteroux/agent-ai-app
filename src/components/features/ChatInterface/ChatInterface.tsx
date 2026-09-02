@@ -340,6 +340,20 @@ export interface ChatInterfaceProps {
   /** Called when the modal wrapper should be closed (only set in modal mode). */
   onDismiss?: () => void;
   /**
+   * Keeps the input box when launched from a panel menu.
+   *
+   * Set by the docked side panel, deliberately NOT by the panel-menu modal:
+   * the modal stays the quick read-only glance it was designed to be, closing
+   * on any outside click, while the side panel is the surface meant to hold a
+   * conversation -- it persists, resizes, and survives navigation.
+   *
+   * Separate from isPanelPreview on purpose: that flag also suppresses the URL
+   * rewriting, which must stay off in both cases -- either surface renders on
+   * top of whatever dashboard the user was looking at, and must not rewrite
+   * its address.
+   */
+  allowFollowUp?: boolean;
+  /**
    * Shared mutable ref written on every render so the title-bar "Open in Agent AI"
    * button (which lives outside this React subtree) can read the latest session
    * ID at click time without any React context crossing.
@@ -354,7 +368,13 @@ export interface ChatInterfaceProps {
   responseLanguage?: ResponseLanguage;
 }
 
-export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLanguage = 'english' }: ChatInterfaceProps = {}) => {
+export const ChatInterface = ({
+  panelContext,
+  onDismiss,
+  sessionRef,
+  responseLanguage = 'english',
+  allowFollowUp = false,
+}: ChatInterfaceProps = {}) => {
   const styles = useStyles2(getStyles);
   const theme = useTheme2();
   const [input, setInput] = useState('');
@@ -902,6 +922,11 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
   // open conversation (see isPanelPreview below) -- send the question
   // automatically instead of waiting for the user, since there's no input
   // box to send it from in this mode anyway (mount-only).
+  //
+  // Still exactly true of the modal. The docked side panel sets allowFollowUp
+  // and does keep an input box, but the automatic first question is what makes
+  // it worth opening from a panel at all -- the answer is the opening move
+  // either way.
   useEffect(() => {
     if (!panelContext) { return; }
     const dsUid = panelContext.targets?.[0]?.datasource?.uid;
@@ -1888,7 +1913,7 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
             className={`${styles.messageList} ${isPanelPreview ? styles.panelPreviewMessageList : ''}`}
             ref={messageListRef}
             onScroll={handleScroll}
-            style={!isPanelPreview ? { paddingBottom: inputAreaBottomPadding } : undefined}
+            style={!isPanelPreview || allowFollowUp ? { paddingBottom: inputAreaBottomPadding } : undefined}
           >
             {conversationStartedAt && (
               <div className={styles.conversationTimestamp} data-testid="conversation-timestamp">
@@ -2158,7 +2183,7 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
                 // instead of clearly above it. Anchoring to the same
                 // measured height keeps it just above the real input box
                 // regardless of how tall it currently is.
-                style={!isPanelPreview ? { bottom: inputAreaBottomPadding + 16 } : undefined}
+                style={!isPanelPreview || allowFollowUp ? { bottom: inputAreaBottomPadding + 16 } : undefined}
                 onClick={scrollDownPage}
                 title="Scroll to bottom"
               >
@@ -2166,7 +2191,7 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
               </button>
             )}
           </div>
-          {!isPanelPreview && (
+          {(!isPanelPreview || allowFollowUp) && (
           <div className={styles.inputArea} ref={inputAreaRefCallback}>
 
             {/* Not configured -- end-user-facing, reads as a temporary outage. */}

@@ -207,6 +207,7 @@ function SidePanel({
           <ChatInterface
             panelContext={panelContext}
             onDismiss={onClose}
+            allowFollowUp
             responseLanguage={responseLanguage}
           />
         </div>
