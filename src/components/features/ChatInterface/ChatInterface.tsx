@@ -698,6 +698,15 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
   }, []);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  // In-conversation search. Matching is done on message text rather than on
+  // the rendered markdown: the answers are markdown-rendered, so highlighting
+  // inside them would mean walking the rendered DOM. Jumping to the matching
+  // message and outlining it is what a long conversation actually needs, and
+  // it stays correct whatever the renderer does.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCursor, setSearchCursor] = useState(0);
   const {
     messagesEndRef,
     messageListRef,
@@ -705,6 +714,45 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
     handleScroll,
     scrollDownPage,
   } = useAutoScroll({ shouldAutoScroll, setShouldAutoScroll, showScrollButton, setShowScrollButton });
+
+  // Indices of messages whose text contains the query, in conversation order.
+  const searchMatches = useMemo(() => {
+    const needle = searchQuery.trim().toLowerCase();
+    if (!needle) {
+      return [];
+    }
+    return messages.reduce<number[]>((acc, msg, index) => {
+      if (msg.content?.toLowerCase().includes(needle)) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+  }, [messages, searchQuery]);
+
+  const currentMatch = searchMatches.length ? searchMatches[searchCursor % searchMatches.length] : -1;
+
+  // Scrolls the matching message into view inside the message list -- the one
+  // true scroll container (see messageListRef's own doc comment).
+  useEffect(() => {
+    if (currentMatch < 0) {
+      return;
+    }
+    const container = messageListRef.current;
+    const target = container?.querySelector(`[data-message-index="${currentMatch}"]`);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [currentMatch, messageListRef]);
+
+  const stepMatch = (delta: number) => {
+    if (searchMatches.length) {
+      setSearchCursor((c) => (c + delta + searchMatches.length) % searchMatches.length);
+    }
+  };
+
+  // Back to the first message. On a long conversation, scrolling up by hand
+  // through streamed answers and tool traces is the slowest way to get there.
+  const scrollToTop = () => {
+    messageListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   // Mirrors shouldAutoScroll for the MutationObserver callback below, which
   // is created once per mount (see its own doc comment) and would otherwise
   // only ever see the shouldAutoScroll value from whichever render set up
@@ -1981,7 +2029,10 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
               return (
                 <React.Fragment key={index}>
                 {resumedDivider}
-                <div className={`${styles.messageWrapper} ${msg.role === 'user' ? styles.userMessageWrapper : styles.assistantMessageWrapper} `}>
+                <div
+                  data-message-index={index}
+                  className={`${styles.messageWrapper} ${msg.role === 'user' ? styles.userMessageWrapper : styles.assistantMessageWrapper} ${index === currentMatch ? styles.searchMatch : ''} `}
+                >
                   <div className={`${styles.message} ${msg.role === 'user' ? (isPanelPreview ? styles.userMessagePreview : styles.userMessage) : styles.assistantMessage} `}>
                     <div className={styles.messageContent}>
                       {(thinkingContent !== null || (msg.role === 'assistant' && msg.toolExecutions && msg.toolExecutions.length > 0)) && (
@@ -2146,6 +2197,69 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
             <div ref={messagesEndRef} />
           </div >
           <div>
+            {searchOpen && !isPanelPreview && (
+              <div className={styles.searchBar}>
+                <Icon name="search" size="sm" />
+                <input
+                  autoFocus
+                  className={styles.searchInput}
+                  value={searchQuery}
+                  placeholder="Search this conversation"
+                  aria-label="Search this conversation"
+                  onChange={(e) => {
+                    setSearchQuery(e.currentTarget.value);
+                    setSearchCursor(0);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      stepMatch(e.shiftKey ? -1 : 1);
+                    }
+                    if (e.key === 'Escape') {
+                      setSearchOpen(false);
+                      setSearchQuery('');
+                    }
+                  }}
+                />
+                <span className={styles.searchCount}>
+                  {searchQuery.trim()
+                    ? searchMatches.length
+                      ? `${(searchCursor % searchMatches.length) + 1}/${searchMatches.length}`
+                      : '0'
+                    : ''}
+                </span>
+                <button className={styles.searchAction} aria-label="Previous match" onClick={() => stepMatch(-1)}>
+                  <Icon name="angle-up" />
+                </button>
+                <button className={styles.searchAction} aria-label="Next match" onClick={() => stepMatch(1)}>
+                  <Icon name="angle-down" />
+                </button>
+                <button
+                  className={styles.searchAction}
+                  aria-label="Close search"
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <Icon name="times" />
+                </button>
+              </div>
+            )}
+            {!isPanelPreview && messages.length > 0 && (
+              <div className={styles.chatTools} style={{ bottom: inputAreaBottomPadding + 76 }}>
+                <button
+                  className={styles.searchAction}
+                  aria-label="Search this conversation"
+                  title="Search this conversation"
+                  onClick={() => setSearchOpen((v) => !v)}
+                >
+                  <Icon name="search" size="lg" />
+                </button>
+                <button className={styles.searchAction} aria-label="Back to the top" title="Back to the top" onClick={scrollToTop}>
+                  <Icon name="arrow-up" size="lg" />
+                </button>
+              </div>
+            )}
             {showScrollButton && (
               <button
                 className={styles.scrollButton}

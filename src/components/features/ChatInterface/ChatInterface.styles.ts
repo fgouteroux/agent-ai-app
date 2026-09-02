@@ -598,6 +598,65 @@ th, td {
   border-radius: 4px;
 }
 `,
+  // Floats above the input area like scrollButton, stacked just above it.
+  chatTools: css`
+position: absolute;
+right: ${theme.spacing(1)};
+display: flex;
+flex-direction: column;
+gap: ${theme.spacing(0.5)};
+z-index: 10;
+color: ${theme.colors.text.secondary};
+`,
+  searchBar: css`
+position: absolute;
+top: ${theme.spacing(1)};
+right: ${theme.spacing(1)};
+display: flex;
+align-items: center;
+gap: ${theme.spacing(0.5)};
+padding: ${theme.spacing(0.5, 1)};
+border: 1px solid ${theme.colors.border.weak};
+border-radius: ${theme.shape.radius.default};
+background: ${theme.colors.background.secondary};
+box-shadow: ${theme.shadows.z2};
+z-index: 11;
+`,
+  searchAction: css`
+background: none;
+border: none;
+padding: 0;
+display: flex;
+align-items: center;
+cursor: pointer;
+color: ${theme.colors.text.secondary};
+&:hover {
+  color: ${theme.colors.text.primary};
+}
+`,
+  searchInput: css`
+border: none;
+outline: none;
+background: transparent;
+color: ${theme.colors.text.primary};
+width: 200px;
+font-size: ${theme.typography.bodySmall.fontSize};
+`,
+  searchCount: css`
+min-width: 36px;
+text-align: right;
+color: ${theme.colors.text.secondary};
+font-size: ${theme.typography.bodySmall.fontSize};
+font-variant-numeric: tabular-nums;
+`,
+  // The matching message is outlined rather than the matched words being
+  // highlighted: answers are markdown-rendered, so highlighting inside them
+  // would mean walking the rendered DOM on every keystroke.
+  searchMatch: css`
+outline: 2px solid ${theme.colors.primary.border};
+outline-offset: 2px;
+border-radius: ${theme.shape.radius.default};
+`,
   scrollButton: css`
 position: absolute;
 bottom: 120px;
