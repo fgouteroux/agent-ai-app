@@ -1289,7 +1289,13 @@ export const ChatInterface = ({
       // explain_panel backend mode; everything else uses the general chat mode.
       const mode = panelContext ? 'explain_panel' : 'chat';
       let streamCompleted = false;
-      for await (const chunk of streamChat(mode, content, context, chatHistory, controller.signal, selectedAgent, attachments)) {
+      // The explain_panel prompt states, correctly, that the modal preview
+      // has no input box and that the user cannot reply. That same prompt
+      // serves the docked side panel, where they can -- hence telling the
+      // backend which of the two this is, rather than letting it assert
+      // something false about the conversation the user is actually in.
+      const interactive = !isPanelPreview || allowFollowUp;
+      for await (const chunk of streamChat(mode, content, context, chatHistory, controller.signal, selectedAgent, attachments, interactive)) {
         // Real, reproduced bug: handleStop() calls controller.abort() and
         // marks the message "Interrupted", but a chunk already sitting in
         // observableToAsyncIterable's internal queue (client.ts) -- or one
