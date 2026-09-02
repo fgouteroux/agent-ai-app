@@ -109,8 +109,11 @@ the assistant asks which one to use instead of silently guessing.
 - **Side menu**: open **Agent AI** from Grafana's installed apps, or press
   `Ctrl+K` and search for Agent AI.
 - **Panel menu**: on a dashboard panel, open the panel menu and choose
-  **Extensions -> Agent AI** to start a chat pre-loaded with that panel's
-  context.
+  **Extensions -> Ask Agent AI** for a quick read-only answer in a modal, or
+  **Ask Agent AI in a new tab** to continue in the full chat page. Either way
+  the assistant receives the panel's queries, time range, datasource and the
+  values it is currently showing, so it reads the data instead of re-running
+  the query.
 - **Dashboard Chat**: ask broader questions about all panels in a dashboard.
 - **Agents page**: create and maintain specialist agents.
 

@@ -2,6 +2,17 @@
 
 All notable changes to this plugin will be documented in this file, starting from its first public release.
 
+## 1.1.0
+
+- French added as a reply language, in the configuration page and in the backend's own language handling.
+- Datasource allowlist: an admin can restrict every tool call to a named set of datasource UIDs, enforced server-side at the single point where a datasource is resolved.
+- Tool call transparency: each tool call now shows the query it ran, the Grafana API requests it made, and the function name behind it.
+- Rate limit and concurrency settings moved into the configuration page (requests per minute, concurrent chats, queue wait, queue depth), instead of being fixed at build time.
+- The internal Grafana URL is now a setting rather than a hardcoded `http://localhost:3000`.
+- In-conversation search and a back-to-top control in the chat.
+- Panel data is sent to the model instead of being re-queried: the values a panel has already loaded travel with the question, downsampled, so the assistant reads what is on screen rather than running the panel's query a second time.
+- Panel menu: a new "Ask Agent AI in a new tab" entry opens the full chat page in a browser tab, carrying the panel, its data, its dashboard uid and its time range -- a real conversation instead of the read-only modal preview.
+
 ## 1.0.0
 
 Initial public release.

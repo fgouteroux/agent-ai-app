@@ -26,8 +26,8 @@
       { "name": "Panel menu integration", "path": "img/screenshots/panel-menu.png" },
       { "name": "Configuration", "path": "img/screenshots/configuration-page.png" }
     ],
-    "version": "1.0.0",
-    "updated": "2026-08-17"
+    "version": "1.1.0",
+    "updated": "2026-09-02"
   },
   "includes": [
     {
