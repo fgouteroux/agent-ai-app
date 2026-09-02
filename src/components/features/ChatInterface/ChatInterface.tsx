@@ -28,6 +28,7 @@ import { GrafanaTheme2, AppEvents, type PluginExtensionPanelContext, type DateTi
 import { streamChat, fetchAgents, fetchLimits, type ChatHistory } from '../../../api/client';
 import { PLUGIN_ID } from '../../../constants';
 import type { AnalysisContext, AgentInfo, WorkerEventInfo } from '../../../context';
+import { summarizePanelData } from '../../../services/panelData';
 import type { Message, ToolExecution } from '../../../types/llm.types';
 import { contextService, DataSourceContext, DashboardContext } from '../../../services/context';
 import { chatHistoryService, type ChatSession } from '../../../services/chatHistory';
@@ -258,6 +259,11 @@ const buildAnalysisContext = (
       title: panelOverride.title,
       queries: panelOverride.targets?.map(t => (t as any).expr || (t as any).query || '').filter(Boolean),
       timeRange: { from: String(panelOverride.timeRange.from), to: String(panelOverride.timeRange.to) },
+      // The frames the dashboard already fetched. See services/panelData.ts:
+      // sending them turns "re-run this query to see the values" into "read
+      // the values", which is both one agent round cheaper and truer to what
+      // the user is actually looking at.
+      displayedData: summarizePanelData(panelOverride),
     };
 
     const panelDatasourceUids = Array.from(new Set(
