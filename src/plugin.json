@@ -104,8 +104,8 @@
         "targets": [
           "grafana/dashboard/panel/menu"
         ],
-        "title": "✨ Ask Agent AI in a side panel",
-        "description": "Open the assistant docked to the right so the dashboard stays visible and usable while you ask about this panel."
+        "title": "✨ Ask Agent AI in a new tab",
+        "description": "Open the full assistant in a new browser tab, carrying this panel and the values it is showing, leaving this dashboard untouched."
       },
       {
         "targets": [

@@ -8,6 +8,9 @@ export interface TimeRange {
 
 export interface PanelContext {
   title: string;
+  /** Panel id inside its dashboard -- lets the model tie this conversation to
+   * one entry of get_dashboard's output. */
+  id?: number;
   description?: string;
   queries?: string[];
   fields?: string[];
@@ -52,7 +55,7 @@ export interface AnalysisContext {
    * viewing a real Grafana dashboard -- just enough for the backend to
    * mention it by name, not the full panel/variable breakdown the removed
    * standalone "Dashboard Chat" page used to build. */
-  dashboard?: { title: string };
+  dashboard?: { title: string; uid?: string };
   logs?: LogsContext;
   metrics?: MetricsContext;
   datasources?: Array<{ name: string; type: string; uid: string }>;

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppPlugin, AppRootProps, PluginExtensionPoints, type PluginExtensionPanelContext } from '@grafana/data';
 import { Alert, Icon, useStyles2 } from '@grafana/ui';
+import { config } from '@grafana/runtime';
 import { AppConfig } from './components/AppConfig';
 import { AgentsPage } from './pages';
 import { ChatInterface } from './components/features/ChatInterface/ChatInterface';
@@ -9,6 +10,7 @@ import { PLUGIN_ID } from './constants';
 import { fetchLimits, type Limits } from './api/client';
 import { normalizeResponseLanguage } from './services/landingText';
 import { openSidePanel } from './sidePanel';
+import { panelHandoffFromContext, storePanelHandoff } from './services/panelHandoff';
 
 const DEFAULT_LIMITS: Limits = {
   attachmentMaxBytes: 51200,
@@ -221,20 +223,47 @@ export const plugin = new AppPlugin<{}>()
       });
     },
   })
-  // Same context, different presentation: docked and unmasked, so the
-  // dashboard stays visible and usable during the exchange. A separate entry
-  // rather than a setting -- the choice depends on what you are doing right
-  // then, not on a lasting preference.
+  // Same context, a full conversation instead of a preview: the standalone
+  // chat page, opened in its own browser tab, carrying this panel with it.
+  //
+  // Deliberately a browser tab rather than something docked inside Grafana's
+  // own layout. Anything docked has to mount outside Grafana's React tree and
+  // reason about its chrome (its header height, its z-index order, which
+  // React DOM entry point exists) -- all internals Grafana is free to change
+  // between releases, and twice already has. A tab needs none of that: an app
+  // route and a query parameter are supported plugin API, and the page it
+  // opens is the same standalone chat as everywhere else, with its history,
+  // its input box and its full width.
   .addLink<PluginExtensionPanelContext>({
-    title: '✨ Ask Agent AI in a side panel',
+    title: '✨ Ask Agent AI in a new tab',
     description:
-      'Open the assistant docked to the right so the dashboard stays visible and usable while you ask about this panel.',
+      'Open the full assistant in a new browser tab, carrying this panel and the values it is showing, leaving this dashboard untouched.',
     targets: [PluginExtensionPoints.DashboardPanelMenu],
-    icon: 'web-section-alt',
-    configure: () => (cachedLimits.enableDashboardIntegration ? {} : undefined),
+    icon: 'external-link-alt',
+    configure: () =>
+      cachedLimits.enableDashboardIntegration && cachedLimits.enableStandaloneChat ? {} : undefined,
     onClick: (_event, helpers) => {
       if (helpers.context) {
-        openSidePanel(helpers.context, cachedLimits.responseLanguage);
+        openPanelInNewTab(helpers.context);
       }
     },
   });
+
+/**
+ * Opens the standalone chat in a new tab for one panel.
+ *
+ * The panel's data is several kilobytes, so it travels through localStorage
+ * (see services/panelHandoff.ts) and the URL carries only its id. When
+ * storage is unavailable the tab still opens, just without the panel context
+ * -- a plain chat beats no chat.
+ */
+function openPanelInNewTab(panelContext: Readonly<PluginExtensionPanelContext>) {
+  const id = storePanelHandoff(panelHandoffFromContext(panelContext));
+  // config.appSubUrl is non-empty whenever Grafana is served under a path
+  // (root_url with a subpath); building the URL by hand without it 404s
+  // there.
+  const base = `${config.appSubUrl ?? ''}/a/${PLUGIN_ID}/chat`;
+  const url = id ? `${base}?panelHandoff=${encodeURIComponent(id)}` : base;
+  // noopener: the new tab gets no window.opener handle back into this one.
+  window.open(url, '_blank', 'noopener');
+}

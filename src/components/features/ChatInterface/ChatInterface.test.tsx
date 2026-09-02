@@ -243,6 +243,51 @@ describe('ChatInterface -- analysis context no longer floods every message with 
     expect(context.datasources).toEqual([{ name: 'Prometheus', type: 'prometheus', uid: 'prom-uid' }]);
   });
 
+  // Opened from a panel's menu into a new browser tab: no live panel object
+  // survives that, so the panel travels through localStorage and the URL
+  // carries only its id (services/panelHandoff.ts).
+  it('restores a panel handed off to this tab, data included', async () => {
+    jest.spyOn(contextService, 'getDataSources').mockReturnValue([
+      { name: 'Prometheus', type: 'prometheus', uid: 'prom-uid' },
+      { name: 'Loki', type: 'loki', uid: 'loki-uid' },
+    ]);
+    localStorage.setItem(
+      'agent_ai_panel_handoff:test-id',
+      JSON.stringify({
+        title: 'Error rate',
+        panelId: 7,
+        dashboardTitle: 'Checkout',
+        dashboardUid: 'dash-1',
+        queries: ['rate(errors[5m])'],
+        timeRange: { from: 'now-6h', to: 'now' },
+        datasourceUids: ['prom-uid'],
+        displayedData: 'Values currently displayed in the panel:\n- errors [min=1 max=9]',
+        createdAt: Date.now(),
+      })
+    );
+    fakeHistory.location = { pathname: '/a/shortbobcat2735-agentai-app/chat', search: '?panelHandoff=test-id' };
+
+    await act(async () => {
+      render(<ChatInterface />);
+    });
+
+    await waitFor(() => expect(streamChatMock).toHaveBeenCalled());
+    const [mode, prompt, context, , , , , interactive] = streamChatMock.mock.calls[0];
+    // Same focused mode as the modal -- one panel either way.
+    expect(mode).toBe('explain_panel');
+    expect(prompt).toContain('Error rate');
+    expect(context.panel.displayedData).toContain('min=1 max=9');
+    expect(context.panel.id).toBe(7);
+    // The dashboard uid travels too: a follow-up about another panel of the
+    // same dashboard is then one get_dashboard call away.
+    expect(context.dashboard).toEqual({ title: 'Checkout', uid: 'dash-1' });
+    expect(context.datasources).toEqual([{ name: 'Prometheus', type: 'prometheus', uid: 'prom-uid' }]);
+    // This is the standalone page, not a preview: the user can reply.
+    expect(interactive).toBe(true);
+
+    fakeHistory.location = { pathname: '/a/shortbobcat2735-agentai-app/chat', search: '' };
+  });
+
   // The backend's explain_panel prompt states outright that the user cannot
   // reply, which is true of the modal and false of the side panel. The flag
   // that tells the two apart is the 8th argument of streamChat.
