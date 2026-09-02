@@ -51,8 +51,6 @@ export interface Limits {
   responseLanguage?: string;
   /** When true, the standalone chat page shows a maintenance notice instead of the real chat -- see Configuration's "Assistant Features" section. Does not affect the dashboard-panel-menu chat. */
   maintenanceMode?: boolean;
-  /** When true, a permanent tab sits on the edge of every page and expands the docked chat. Off by default -- it's UI imposed on everyone in the org, so an admin decides. */
-  enableSideRail?: boolean;
 }
 
 /** Admin-configured limits/feature toggles the UI needs (e.g. attachment size, which surfaces are enabled). */

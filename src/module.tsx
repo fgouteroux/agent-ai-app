@@ -9,7 +9,6 @@ import { getStyles as getChatInterfaceStyles } from './components/features/ChatI
 import { PLUGIN_ID } from './constants';
 import { fetchLimits, type Limits } from './api/client';
 import { normalizeResponseLanguage } from './services/landingText';
-import { openSidePanel } from './sidePanel';
 import { panelHandoffFromContext, storePanelHandoff } from './services/panelHandoff';
 
 const DEFAULT_LIMITS: Limits = {
@@ -19,7 +18,6 @@ const DEFAULT_LIMITS: Limits = {
   auditLogFullContent: false,
   responseLanguage: 'english',
   maintenanceMode: false,
-  enableSideRail: false,
 };
 
 // Fetched once at module load, not per-render -- extension `configure`
@@ -36,13 +34,6 @@ let cachedLimits: Limits = DEFAULT_LIMITS;
 fetchLimits()
   .then((limits) => {
     cachedLimits = limits;
-    // Permanent edge tab, when the admin enabled it. Mounted here, at module
-    // load, because this is the only plugin code that runs whatever the page
-    // is -- an app page would only run on its own route. Started collapsed:
-    // the chat only expands on click.
-    if (limits.enableSideRail && limits.enableStandaloneChat) {
-      openSidePanel(undefined, limits.responseLanguage, true);
-    }
   })
   .catch(() => {});
 
@@ -166,20 +157,6 @@ export const plugin = new AppPlugin<{}>()
     icon: 'ai-sparkle',
     path: `/a/${PLUGIN_ID}/chat`,
     configure: () => (cachedLimits.enableStandaloneChat ? {} : undefined),
-  })
-  // Same chat as the dedicated page, docked to the edge instead of taking
-  // the screen: mounted into document.body, so outside Grafana's React tree,
-  // it survives navigation and stays open from dashboard to dashboard. No
-  // panel context here -- this is a free-form conversation.
-  .addLink({
-    title: '✨ Agent AI in a side panel',
-    description: 'Dock the assistant to the right of the screen and keep navigating Grafana while you chat.',
-    targets: [PluginExtensionPoints.CommandPalette],
-    icon: 'web-section-alt',
-    configure: () => (cachedLimits.enableStandaloneChat ? {} : undefined),
-    onClick: () => {
-      openSidePanel(undefined, cachedLimits.responseLanguage);
-    },
   })
   .addLink<PluginExtensionPanelContext>({
     // Grafana's panel-menu "Extensions" submenu doesn't render the `icon`

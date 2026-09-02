@@ -382,20 +382,6 @@ export interface ChatInterfaceProps {
   /** Called when the modal wrapper should be closed (only set in modal mode). */
   onDismiss?: () => void;
   /**
-   * Keeps the input box when launched from a panel menu.
-   *
-   * Set by the docked side panel, deliberately NOT by the panel-menu modal:
-   * the modal stays the quick read-only glance it was designed to be, closing
-   * on any outside click, while the side panel is the surface meant to hold a
-   * conversation -- it persists, resizes, and survives navigation.
-   *
-   * Separate from isPanelPreview on purpose: that flag also suppresses the URL
-   * rewriting, which must stay off in both cases -- either surface renders on
-   * top of whatever dashboard the user was looking at, and must not rewrite
-   * its address.
-   */
-  allowFollowUp?: boolean;
-  /**
    * Shared mutable ref written on every render so the title-bar "Open in Agent AI"
    * button (which lives outside this React subtree) can read the latest session
    * ID at click time without any React context crossing.
@@ -415,7 +401,6 @@ export const ChatInterface = ({
   onDismiss,
   sessionRef,
   responseLanguage = 'english',
-  allowFollowUp = false,
 }: ChatInterfaceProps = {}) => {
   const styles = useStyles2(getStyles);
   const theme = useTheme2();
@@ -1022,10 +1007,9 @@ export const ChatInterface = ({
   // automatically instead of waiting for the user, since there's no input
   // box to send it from in this mode anyway (mount-only).
   //
-  // Still exactly true of the modal. The docked side panel sets allowFollowUp
-  // and does keep an input box, but the automatic first question is what makes
-  // it worth opening from a panel at all -- the answer is the opening move
-  // either way.
+  // A conversation about the panel happens in the new tab instead (see the
+  // restoredPanel effect below), which is the standalone page and has an
+  // input box of its own.
   useEffect(() => {
     if (!panelContext) { return; }
     const dsUid = panelContext.targets?.[0]?.datasource?.uid;
@@ -1354,12 +1338,12 @@ export const ChatInterface = ({
       // `interactive` below: here the user can reply.
       const mode = panelContext || restoredPanel ? 'explain_panel' : 'chat';
       let streamCompleted = false;
-      // The explain_panel prompt states, correctly, that the modal preview
-      // has no input box and that the user cannot reply. That same prompt
-      // serves the docked side panel, where they can -- hence telling the
-      // backend which of the two this is, rather than letting it assert
-      // something false about the conversation the user is actually in.
-      const interactive = !isPanelPreview || allowFollowUp;
+      // The explain_panel prompt states that the user cannot reply, which is
+      // true of the modal preview and false of this same mode running on the
+      // standalone page for a panel handed off to a new tab. The backend is
+      // told which of the two it is rather than left to assert something
+      // false about the conversation the user is actually in.
+      const interactive = !isPanelPreview;
       for await (const chunk of streamChat(mode, content, context, chatHistory, controller.signal, selectedAgent, attachments, interactive)) {
         // Real, reproduced bug: handleStop() calls controller.abort() and
         // marks the message "Interrupted", but a chunk already sitting in
@@ -2050,7 +2034,7 @@ export const ChatInterface = ({
             className={`${styles.messageList} ${isPanelPreview ? styles.panelPreviewMessageList : ''}`}
             ref={messageListRef}
             onScroll={handleScroll}
-            style={!isPanelPreview || allowFollowUp ? { paddingBottom: inputAreaBottomPadding } : undefined}
+            style={!isPanelPreview ? { paddingBottom: inputAreaBottomPadding } : undefined}
           >
             {conversationStartedAt && (
               <div className={styles.conversationTimestamp} data-testid="conversation-timestamp">
@@ -2386,7 +2370,7 @@ export const ChatInterface = ({
                 // instead of clearly above it. Anchoring to the same
                 // measured height keeps it just above the real input box
                 // regardless of how tall it currently is.
-                style={!isPanelPreview || allowFollowUp ? { bottom: inputAreaBottomPadding + 16 } : undefined}
+                style={!isPanelPreview ? { bottom: inputAreaBottomPadding + 16 } : undefined}
                 onClick={scrollDownPage}
                 title="Scroll to bottom"
               >
@@ -2394,7 +2378,7 @@ export const ChatInterface = ({
               </button>
             )}
           </div>
-          {(!isPanelPreview || allowFollowUp) && (
+          {!isPanelPreview && (
           <div className={styles.inputArea} ref={inputAreaRefCallback}>
 
             {/* Not configured -- end-user-facing, reads as a temporary outage. */}

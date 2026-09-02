@@ -24,10 +24,10 @@ func TestBuildSystemPrompt_ExplainPanel(t *testing.T) {
 	}
 }
 
-// The modal preview and the docked side panel share the explain_panel mode
-// but not its most consequential sentence: whether the user can reply. Told
-// wrongly, the model either refuses to ask a question it should ask (side
-// panel) or asks one that can never be answered (modal).
+// The modal preview and the chat page opened for a panel share the
+// explain_panel mode but not its most consequential sentence: whether the
+// user can reply. Told wrongly, the model either refuses to ask a question it
+// should ask (the page) or asks one that can never be answered (the modal).
 func TestBuildSystemPrompt_ExplainPanel_ConversationShape(t *testing.T) {
 	t.Parallel()
 
@@ -37,13 +37,13 @@ func TestBuildSystemPrompt_ExplainPanel_ConversationShape(t *testing.T) {
 	if !contains(oneShot, "one-shot, read-only preview") {
 		t.Error("expected the default (modal) prompt to state the user cannot reply")
 	}
-	if contains(oneShot, "docked in a side panel") {
+	if contains(oneShot, "on the full chat page") {
 		t.Error("modal prompt must not describe an input box it does not have")
 	}
 
 	interactive := buildSystemPrompt("explain_panel", "generic", ctx, false, nil, nil, 3, "", "", false, "", "", brainAgentStateUnknown, "", withInteractiveChat(true))
-	if !contains(interactive, "docked in a side panel") {
-		t.Error("expected the side-panel prompt to state the user can reply")
+	if !contains(interactive, "on the full chat page") {
+		t.Error("expected the chat-page prompt to state the user can reply")
 	}
 	if contains(interactive, "the user CANNOT reply") {
 		t.Error("side-panel prompt still claims the user cannot reply")

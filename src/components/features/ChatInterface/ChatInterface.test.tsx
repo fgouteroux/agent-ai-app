@@ -289,8 +289,9 @@ describe('ChatInterface -- analysis context no longer floods every message with 
   });
 
   // The backend's explain_panel prompt states outright that the user cannot
-  // reply, which is true of the modal and false of the side panel. The flag
-  // that tells the two apart is the 8th argument of streamChat.
+  // reply -- true of the modal preview, false of the same mode running on the
+  // chat page for a panel handed off to a new tab. The flag that tells the
+  // two apart is the 8th argument of streamChat.
   it('tells the backend whether the user can actually reply', async () => {
     const panelContext = {
       pluginId: 'test-datasource',
@@ -307,11 +308,21 @@ describe('ChatInterface -- analysis context no longer floods every message with 
     expect(streamChatMock.mock.calls[0][7]).toBe(false);
 
     streamChatMock.mockClear();
+    localStorage.setItem(
+      'agent_ai_panel_handoff:reply-test',
+      JSON.stringify({
+        title: 'Error rate',
+        timeRange: { from: 'now-6h', to: 'now' },
+        createdAt: Date.now(),
+      })
+    );
+    fakeHistory.location = { pathname: '/a/shortbobcat2735-agentai-app/chat', search: '?panelHandoff=reply-test' };
     await act(async () => {
-      render(<ChatInterface panelContext={panelContext} onDismiss={jest.fn()} allowFollowUp />);
+      render(<ChatInterface />);
     });
     await waitFor(() => expect(streamChatMock).toHaveBeenCalled());
     expect(streamChatMock.mock.calls[0][7]).toBe(true);
+    fakeHistory.location = { pathname: '/a/shortbobcat2735-agentai-app/chat', search: '' };
   });
 });
 

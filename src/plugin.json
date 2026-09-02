@@ -106,13 +106,6 @@
         ],
         "title": "✨ Ask Agent AI in a new tab",
         "description": "Open the full assistant in a new browser tab, carrying this panel and the values it is showing, leaving this dashboard untouched."
-      },
-      {
-        "targets": [
-          "grafana/commandpalette/action"
-        ],
-        "title": "✨ Agent AI in a side panel",
-        "description": "Dock the assistant to the right of the screen and keep navigating Grafana while you chat."
       }
     ]
   }

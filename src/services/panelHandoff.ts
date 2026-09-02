@@ -5,8 +5,8 @@ import { summarizePanelData } from './panelData';
 /**
  * Hands a panel over to the chat page opened in a NEW BROWSER TAB.
  *
- * The docked side panel gets its context by simply being handed the live
- * object; a new tab cannot. A URL is the obvious channel and the wrong one
+ * The modal gets its context by simply being handed the live panel object;
+ * a new tab cannot. A URL is the obvious channel and the wrong one
  * here: the interesting part is the panel's downsampled data, several
  * kilobytes of it, which does not belong in a query string (length limits,
  * server logs, a link nobody can read or share). So the URL carries an

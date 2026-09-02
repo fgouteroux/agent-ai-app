@@ -1011,7 +1011,8 @@ type promptOptions struct {
 type promptOption func(*promptOptions)
 
 // withInteractiveChat marks the conversation as one the user can continue --
-// the standalone chat and the docked side panel, not the modal preview.
+// the standalone chat page, including the tab opened from a panel's menu, but
+// not the modal preview.
 func withInteractiveChat(interactive bool) promptOption {
 	return func(o *promptOptions) { o.interactive = interactive }
 }
@@ -1133,15 +1134,15 @@ You also help with Grafana itself, not just this instance's live data: "how do I
 
 	case "explain_panel":
 		// Two very different surfaces share this mode: the panel-menu modal,
-		// a one-shot preview with no input box, and the docked side panel,
-		// a real conversation the user can continue. Telling the model "the
-		// user CANNOT reply" is essential in the first case and simply false
-		// in the second -- it made the assistant refuse to ask even the one
-		// clarifying question that would have been worth asking, in a panel
-		// where answering it takes a sentence.
+		// a one-shot preview with no input box, and the chat page opened in
+		// a new tab for that panel, a real conversation the user can
+		// continue. Telling the model "the user CANNOT reply" is essential
+		// in the first case and simply false in the second -- it made the
+		// assistant refuse to ask even the one clarifying question that was
+		// worth asking, on a page where answering it takes a sentence.
 		conversationShape := `CRITICAL: this is a one-shot, read-only preview -- there is no input box, and the user CANNOT reply, answer a follow-up, or run anything for you. If a tool call fails, returns no data, or you are missing some detail, do not ask the user for it or propose a next step that depends on their reply -- that message can never arrive. Instead, state plainly what you could and could not determine, give the best answer possible with what you actually have, and end there.`
 		if options.interactive {
-			conversationShape = `This conversation is docked in a side panel WITH an input box: the user CAN reply, ask follow-ups, and choose between options you put to them. Answer the question in front of you completely on its own all the same -- never end by asking what they would like to look at instead of answering it -- but when something is genuinely ambiguous, or a choice is theirs to make, asking for it at the end of a real answer is worth doing here rather than impossible. A follow-up may also warrant more tool calls than the opening answer did: go as deep as the question actually requires. When the panel context carries a dashboard uid, a follow-up about ANOTHER panel of that same dashboard is one get_dashboard call away -- make it yourself rather than asking the user which panel they mean or telling them to open it.`
+			conversationShape = `This conversation is on the full chat page, WITH an input box: the user CAN reply, ask follow-ups, and choose between options you put to them. Answer the question in front of you completely on its own all the same -- never end by asking what they would like to look at instead of answering it -- but when something is genuinely ambiguous, or a choice is theirs to make, asking for it at the end of a real answer is worth doing here rather than impossible. A follow-up may also warrant more tool calls than the opening answer did: go as deep as the question actually requires. When the panel context carries a dashboard uid, a follow-up about ANOTHER panel of that same dashboard is one get_dashboard call away -- make it yourself rather than asking the user which panel they mean or telling them to open it.`
 		}
 		return fmt.Sprintf(`You are Agent AI, a Grafana panel specialist. Explain what the following panel shows, which datasource/query it uses, what normal values look like, and what would indicate a problem.
 This is a focused, single-panel question, not an open investigation -- answer directly and concisely (a few short paragraphs, not a full report), and call at most one or two tools if you need to confirm the panel's real query/current value; do not chain many exploratory calls for a single-panel question.

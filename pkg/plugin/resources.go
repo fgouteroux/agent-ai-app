@@ -27,11 +27,11 @@ type ChatRequest struct {
 	Messages    []ChatMessage    `json:"messages,omitempty"`
 	Attachments []ChatAttachment `json:"attachments,omitempty"`
 	// Interactive is true when the user has an input box and can reply --
-	// the standalone chat and the docked side panel. The panel-menu modal
-	// is a one-shot preview with none, which the explain_panel prompt
-	// states outright; without this flag it stated it of the side panel
-	// too, telling the model the user could not answer a question they
-	// were perfectly able to answer.
+	// the standalone chat page, including the tab opened from a panel's
+	// menu. The panel-menu modal is a one-shot preview with none, which the
+	// explain_panel prompt states outright; without this flag it stated it
+	// of that tab too, telling the model the user could not answer a
+	// question they were perfectly able to answer.
 	Interactive bool `json:"interactive,omitempty"`
 }
 
@@ -318,13 +318,8 @@ func (a *App) handleLimits(w http.ResponseWriter, _ *http.Request) {
 	if a.settings.EnableDashboardIntegration != nil {
 		dashboardIntegration = *a.settings.EnableDashboardIntegration
 	}
-	sideRail := false
-	if a.settings.EnableSideRail != nil {
-		sideRail = *a.settings.EnableSideRail
-	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"attachmentMaxBytes":         attachmentMaxBytes(a.settings),
-		"enableSideRail":             sideRail,
 		"maxAttachments":             maxAttachmentsPerMessage,
 		"maxAttachmentsTotalBytes":   maxAttachmentsTotalBytes(),
 		"enableStandaloneChat":       standaloneChat,
