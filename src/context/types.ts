@@ -8,6 +8,9 @@ export interface TimeRange {
 
 export interface PanelContext {
   title: string;
+  /** Panel id inside its dashboard -- lets the model tie this conversation to
+   * one entry of get_dashboard's output. */
+  id?: number;
   description?: string;
   queries?: string[];
   fields?: string[];
@@ -52,7 +55,7 @@ export interface AnalysisContext {
    * viewing a real Grafana dashboard -- just enough for the backend to
    * mention it by name, not the full panel/variable breakdown the removed
    * standalone "Dashboard Chat" page used to build. */
-  dashboard?: { title: string };
+  dashboard?: { title: string; uid?: string };
   logs?: LogsContext;
   metrics?: MetricsContext;
   datasources?: Array<{ name: string; type: string; uid: string }>;
@@ -73,6 +76,12 @@ export interface ChatRequest {
   agent?: string;
   prompt: string;
   context: AnalysisContext;
+  /** True when the user has an input box and CAN reply -- the standalone
+   * chat page, including the tab opened from a panel's menu. The panel-menu
+   * modal is a one-shot preview with none, and the explain_panel system
+   * prompt tells the model exactly that, so it must not claim the same of a
+   * conversation the user can actually continue. */
+  interactive?: boolean;
   messages?: Array<{ role: string; content: string }>;
   attachments?: ChatAttachment[];
 }

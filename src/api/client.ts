@@ -16,9 +16,10 @@ export async function sendChat(
   context: AnalysisContext,
   messages?: ChatHistory[],
   agent?: string,
-  attachments?: ChatAttachment[]
+  attachments?: ChatAttachment[],
+  interactive?: boolean
 ): Promise<ChatResponse> {
-  const request: ChatRequest = { mode, agent, prompt, context, messages, attachments };
+  const request: ChatRequest = { mode, agent, prompt, context, messages, attachments, interactive };
   return getBackendSrv().post(`${RESOURCE_BASE}/chat`, request);
 }
 
@@ -270,9 +271,10 @@ export async function* streamChat(
   messages?: ChatHistory[],
   signal?: AbortSignal,
   agent?: string,
-  attachments?: ChatAttachment[]
+  attachments?: ChatAttachment[],
+  interactive?: boolean
 ): AsyncGenerator<ChatResponse> {
-  const request: ChatRequest = { mode, agent, prompt, context, messages, attachments };
+  const request: ChatRequest = { mode, agent, prompt, context, messages, attachments, interactive };
 
   // Security-audit finding M1: this used to be a raw fetch() with a manual
   // credentials:'include' -- the only call in this file bypassing

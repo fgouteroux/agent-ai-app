@@ -24,6 +24,37 @@ func TestBuildSystemPrompt_ExplainPanel(t *testing.T) {
 	}
 }
 
+// The modal preview and the chat page opened for a panel share the
+// explain_panel mode but not its most consequential sentence: whether the
+// user can reply. Told wrongly, the model either refuses to ask a question it
+// should ask (the page) or asks one that can never be answered (the modal).
+func TestBuildSystemPrompt_ExplainPanel_ConversationShape(t *testing.T) {
+	t.Parallel()
+
+	ctx := json.RawMessage(`{"panel":{"title":"CPU Usage"}}`)
+
+	oneShot := buildSystemPrompt("explain_panel", "generic", ctx, false, nil, nil, 3, "", "", false, "", "", brainAgentStateUnknown, "")
+	if !contains(oneShot, "one-shot, read-only preview") {
+		t.Error("expected the default (modal) prompt to state the user cannot reply")
+	}
+	if contains(oneShot, "on the full chat page") {
+		t.Error("modal prompt must not describe an input box it does not have")
+	}
+
+	interactive := buildSystemPrompt("explain_panel", "generic", ctx, false, nil, nil, 3, "", "", false, "", "", brainAgentStateUnknown, "", withInteractiveChat(true))
+	if !contains(interactive, "on the full chat page") {
+		t.Error("expected the chat-page prompt to state the user can reply")
+	}
+	if contains(interactive, "the user CANNOT reply") {
+		t.Error("side-panel prompt still claims the user cannot reply")
+	}
+	// Everything else about the mode is unchanged -- this flag swaps one
+	// paragraph, not the specialist framing or the panel context.
+	if !contains(interactive, "panel specialist") || !contains(interactive, "CPU Usage") {
+		t.Error("expected the rest of the explain_panel prompt to be untouched")
+	}
+}
+
 func TestBuildSystemPrompt_AnalyzeLogs(t *testing.T) {
 	t.Parallel()
 

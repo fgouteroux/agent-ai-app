@@ -68,6 +68,13 @@
         "targets": ["grafana/dashboard/panel/menu"],
         "title": "✨ Ask Agent AI",
         "description": "Ask the assistant about this panel -- uses the same chat and the same real tools (query_prometheus, query_loki, get_dashboard, etc.)"
+      },
+      {
+        "targets": [
+          "grafana/dashboard/panel/menu"
+        ],
+        "title": "✨ Ask Agent AI in a new tab",
+        "description": "Open the full assistant in a new browser tab, carrying this panel and the values it is showing, leaving this dashboard untouched."
       }
     ]
   }

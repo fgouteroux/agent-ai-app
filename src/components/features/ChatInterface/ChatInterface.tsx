@@ -29,6 +29,7 @@ import { streamChat, fetchAgents, fetchLimits, type ChatHistory } from '../../..
 import { PLUGIN_ID } from '../../../constants';
 import type { AnalysisContext, AgentInfo, WorkerEventInfo } from '../../../context';
 import { summarizePanelData } from '../../../services/panelData';
+import { readPanelHandoff, type PanelHandoff } from '../../../services/panelHandoff';
 import type { Message, ToolExecution } from '../../../types/llm.types';
 import { contextService, DataSourceContext, DashboardContext } from '../../../services/context';
 import { chatHistoryService, type ChatSession } from '../../../services/chatHistory';
@@ -238,6 +239,11 @@ const buildAnalysisContext = (
   dashboard: DashboardContext,
   dataSources: DataSourceContext[],
   panelOverride?: Readonly<PluginExtensionPanelContext>,
+  // Set when this tab was opened from a panel's menu (services/panelHandoff.ts):
+  // the same facts as panelOverride, minus the live Grafana object, which does
+  // not survive a new browser tab. The data was summarized in the tab that DID
+  // have it.
+  restoredPanel?: PanelHandoff,
 ): AnalysisContext => {
   // Deliberately NOT sending the full datasources list on every message
   // anymore -- it cost real prompt tokens on every single turn, and the
@@ -251,12 +257,16 @@ const buildAnalysisContext = (
   };
 
   if (dashboard?.uid) {
-    context.dashboard = { title: dashboard.title || 'Untitled dashboard' };
+    // The uid, not just the title: with it the model can call get_dashboard
+    // and answer about the OTHER panels of the dashboard the user is on,
+    // which a title alone only lets it search for.
+    context.dashboard = { title: dashboard.title || 'Untitled dashboard', uid: dashboard.uid };
   }
 
   if (panelOverride) {
     context.panel = {
       title: panelOverride.title,
+      id: panelOverride.id,
       queries: panelOverride.targets?.map(t => (t as any).expr || (t as any).query || '').filter(Boolean),
       timeRange: { from: String(panelOverride.timeRange.from), to: String(panelOverride.timeRange.to) },
       // The frames the dashboard already fetched. See services/panelData.ts:
@@ -274,6 +284,32 @@ const buildAnalysisContext = (
     if (panelDatasourceUids.length > 0) {
       context.datasources = dataSources
         .filter(ds => panelDatasourceUids.includes(ds.uid))
+        .map(ds => ({ name: ds.name, type: ds.type, uid: ds.uid }));
+    }
+  } else if (restoredPanel) {
+    context.panel = {
+      title: restoredPanel.title,
+      id: restoredPanel.panelId,
+      queries: restoredPanel.queries,
+      timeRange: restoredPanel.timeRange,
+      displayedData: restoredPanel.displayedData,
+    };
+    // This tab is on the plugin's own route, not on the dashboard, so
+    // contextService's own auto-discovery finds nothing to report -- the
+    // dashboard the panel came from is only known through the handoff.
+    if (restoredPanel.dashboardTitle || restoredPanel.dashboardUid) {
+      context.dashboard = {
+        title: restoredPanel.dashboardTitle || 'Untitled dashboard',
+        uid: restoredPanel.dashboardUid,
+      };
+    }
+    // Names and types come from THIS tab's own datasource list rather than
+    // from the stored payload: the UID is the only thing worth carrying, and
+    // the rest can be looked up fresh.
+    const uids = restoredPanel.datasourceUids ?? [];
+    if (uids.length > 0) {
+      context.datasources = dataSources
+        .filter(ds => uids.includes(ds.uid))
         .map(ds => ({ name: ds.name, type: ds.type, uid: ds.uid }));
     }
   }
@@ -636,6 +672,15 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
   // a normal chat someone can keep talking to (deliberate cost control: no
   // follow-up questions means no extra GPU usage from this entry point).
   const isPanelPreview = Boolean(panelContext);
+  // Opened from a panel's menu into this new browser tab: the panel travelled
+  // through localStorage (services/panelHandoff.ts) and the URL carries only
+  // its id. Read once, at mount -- this is a fact about how the tab was
+  // opened, not something that changes while it is open. NOT a panel preview:
+  // this is the standalone page, with its input box, its history and its full
+  // width; the panel is context, not a mode.
+  const [restoredPanel] = useState<PanelHandoff | undefined>(() =>
+    readPanelHandoff(searchParams.get('panelHandoff'))
+  );
   // standaloneContainerRef/standaloneHeight: real-measured fix for a live
   // bug -- a static `100dvh` on the root container assumes it starts at
   // viewport y=0, but in standalone full-page mode it actually starts BELOW
@@ -923,6 +968,23 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
     );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Same opening question as the modal's, asked in a tab the user can answer
+  // in. Sent automatically rather than pre-filled: they picked a panel from
+  // its menu, so the question is already decided -- making them press Enter
+  // on a sentence they did not write adds a step and no choice.
+  useEffect(() => {
+    if (!restoredPanel || panelContext) { return; }
+    const dsUid = restoredPanel.datasourceUids?.[0];
+    const dsHint = dsUid ? ` (datasource uid: ${dsUid})` : '';
+    const dashboardHint = restoredPanel.dashboardTitle
+      ? ` on the "${restoredPanel.dashboardTitle}" dashboard`
+      : '';
+    const periodPhrase = formatRelativeTimeRange(restoredPanel.timeRange.from, restoredPanel.timeRange.to);
+    handleSend(
+      `Explain the "${restoredPanel.title}" panel${dashboardHint}${dsHint}, ${periodPhrase}.`
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pre-fill input from panel context URL params — used when "Open in Agent AI"
   // is clicked from the modal title bar (full-page navigation path)
   useEffect(() => {
@@ -1180,7 +1242,7 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
     try {
       const dashboard = await contextService.getCurrentDashboard();
       const dataSources = contextService.getDataSources();
-      const context = buildAnalysisContext(dashboard, dataSources, panelContext);
+      const context = buildAnalysisContext(dashboard, dataSources, panelContext, restoredPanel);
 
       // Create a placeholder message for the assistant
       const assistantMessage: Message = { role: 'assistant', content: '' };
@@ -1214,9 +1276,18 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
       // list_alerts...), the system prompt, and the LLM endpoint entirely server-side.
       // Launched from a panel's context menu -> the more focused, cheaper
       // explain_panel backend mode; everything else uses the general chat mode.
-      const mode = panelContext ? 'explain_panel' : 'chat';
+      // A restored panel makes this the same focused, cheaper mode as the
+      // modal -- the question is about one panel either way. What differs is
+      // `interactive` below: here the user can reply.
+      const mode = panelContext || restoredPanel ? 'explain_panel' : 'chat';
       let streamCompleted = false;
-      for await (const chunk of streamChat(mode, content, context, chatHistory, controller.signal, selectedAgent, attachments)) {
+      // The explain_panel prompt states that the user cannot reply, which is
+      // true of the modal preview and false of this same mode running on the
+      // standalone page for a panel handed off to a new tab. The backend is
+      // told which of the two it is rather than left to assert something
+      // false about the conversation the user is actually in.
+      const interactive = !isPanelPreview;
+      for await (const chunk of streamChat(mode, content, context, chatHistory, controller.signal, selectedAgent, attachments, interactive)) {
         // Real, reproduced bug: handleStop() calls controller.abort() and
         // marks the message "Interrupted", but a chunk already sitting in
         // observableToAsyncIterable's internal queue (client.ts) -- or one
