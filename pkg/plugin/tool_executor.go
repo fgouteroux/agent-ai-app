@@ -1527,7 +1527,7 @@ func (te *ToolExecutor) brainAgentInstallState(ctx context.Context) (brainAgentI
 	if te.grafanaURL == "" {
 		return brainAgentStateUnknown, ""
 	}
-	body, err := te.doGrafanaRequest(ctx, http.MethodGet, "/api/plugins/brain-agent/settings", nil)
+	body, err := te.doGrafanaRequest(ctx, http.MethodGet, "/api/plugins/shortbobcat2735-brainagent-app/settings", nil)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "status 404"):

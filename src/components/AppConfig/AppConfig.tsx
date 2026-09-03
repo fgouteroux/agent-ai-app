@@ -117,7 +117,7 @@ const PROVIDER_EXAMPLES: ProviderExample[] = [
   {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.6-flash',
     tagline: 'High token limit and multi-tool support',
     note: 'Tool-calling and multi-step rounds work perfectly. Generous free tier limits.',
   },
