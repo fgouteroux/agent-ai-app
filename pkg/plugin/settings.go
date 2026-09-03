@@ -50,6 +50,7 @@ const (
 type Settings struct {
 	EndpointURL      string            `json:"endpointURL"`
 	Model            string            `json:"model"`
+	LightModeForDefaultAgent bool `json:"lightModeForDefaultAgent,omitempty"`
 	TimeoutSeconds   int               `json:"timeoutSeconds"`
 	MaxTokens        int               `json:"maxTokens"`
 	MaxContextTokens int               `json:"maxContextTokens"`
