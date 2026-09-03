@@ -78,7 +78,7 @@ func (t *geminiThoughtRewriteTransport) RoundTrip(req *http.Request) (*http.Resp
 		} else {
 			log.Printf("Reading response body fully for non-stream thought_signature extraction")
 			bodyBytes, readErr := io.ReadAll(resp.Body)
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			if readErr == nil {
 				var payload map[string]interface{}
 				if err := json.Unmarshal(bodyBytes, &payload); err == nil {
@@ -146,10 +146,10 @@ func (i *geminiStreamInterceptor) Read(p []byte) (n int, err error) {
 			if strings.HasPrefix(lineStr, "data: ") {
 				jsonStr := strings.TrimPrefix(lineStr, "data: ")
 				if jsonStr != "[DONE]" {
-					json.Unmarshal([]byte(jsonStr), &payload)
+					_ = json.Unmarshal([]byte(jsonStr), &payload)
 				}
 			} else if strings.HasPrefix(lineStr, "{") {
-				json.Unmarshal([]byte(lineStr), &payload)
+				_ = json.Unmarshal([]byte(lineStr), &payload)
 			}
 
 			if payload != nil {
