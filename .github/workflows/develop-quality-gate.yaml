@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: develop-quality-gate-${{ github.workflow }}-${{ github.ref }}
@@ -23,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -36,8 +39,64 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          warn-only: false
+
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Check committed artifacts
+        run: |
+          set -euo pipefail
+          tracked_artifacts="$(git ls-files \
+            'dist/*' \
+            '*.zip' \
+            '*.tar' \
+            '*.tar.gz' \
+            '*.tgz' \
+            '*.rar' \
+            '*.7z' \
+            '*.exe' \
+            '*.dll' \
+            '*.so' \
+            '*.dylib' \
+            '*.apk' \
+            '*.deb' \
+            '*.rpm' \
+            '*.msi' \
+            '*.jar' \
+            '*.war' \
+            '*.class' \
+            '*.wasm')"
+          if [ -n "$tracked_artifacts" ]; then
+            echo "::error::Do not commit generated archives, dist output, or binary artifacts:"
+            echo "$tracked_artifacts"
+            exit 1
+          fi
+
+      - name: Check sensitive file names
+        run: |
+          set -euo pipefail
+          sensitive_files="$(git ls-files | grep -Ei '(^|/)(\.env($|\.)|id_rsa|id_dsa|id_ecdsa|id_ed25519|.*\.(pem|key|p12|pfx|crt|cer))$' | grep -Ev '(^|/)\.env\.example$' || true)"
+          if [ -n "$sensitive_files" ]; then
+            echo "::error::Sensitive-looking files must not be committed:"
+            echo "$sensitive_files"
+            exit 1
+          fi
+
+      - name: Check npm lockfile registries
+        run: |
+          set -euo pipefail
+          bad_urls="$(jq -r '.. | objects | .resolved? // empty' package-lock.json | grep -Ev '^https://registry\.npmjs\.org/' || true)"
+          if [ -n "$bad_urls" ]; then
+            echo "::error::package-lock.json contains package tarballs outside registry.npmjs.org:"
+            echo "$bad_urls"
+            exit 1
+          fi
 
       - name: Check Go formatting
         run: |
@@ -52,6 +111,9 @@ jobs:
       - name: Go vet
         run: go vet ./pkg/...
 
+      - name: Verify Go modules
+        run: go mod verify
+
       - name: Go tests
         run: go test -v -race -count=1 ./pkg/...
 
@@ -60,6 +122,9 @@ jobs:
 
       - name: Go vulnerability scan
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./pkg/...
+
+      - name: Secret scan
+        run: go run github.com/gitleaks/gitleaks/v8@latest detect --source . --no-git --redact --verbose
 
       - name: Frontend audit
         run: npm audit --omit=dev --audit-level=moderate
