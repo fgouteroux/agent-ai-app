@@ -240,3 +240,25 @@ func matchAt(s, substr string, pos int) bool {
 	}
 	return true
 }
+
+func TestPromptRequestsExplicitLanguage_French(t *testing.T) {
+	// Asking for a translation from the chat window goes through this: no
+	// button, an explicit request in the message is enough, and it holds for
+	// that turn (see languageOverridePhrases' doc comment).
+	requests := []string{
+		"réponds en français s'il te plaît",
+		"réponds en francais", // no accent, a common way to type it
+		"Can you answer in French?",
+		"responda em francês", // asked from a Portuguese context
+	}
+	for _, prompt := range requests {
+		if !promptRequestsExplicitLanguage(prompt) {
+			t.Errorf("request not detected: %q", prompt)
+		}
+	}
+
+	// A sentence merely mentioning France must not switch languages.
+	if promptRequestsExplicitLanguage("le cluster est hébergé en France") {
+		t.Error("false positive: no language request here")
+	}
+}

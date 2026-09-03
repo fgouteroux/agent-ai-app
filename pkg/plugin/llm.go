@@ -421,9 +421,12 @@ func looksLikeMidResponseLanguageSwitch(text string) bool {
 // persist a "the user overrode this earlier" flag across turns, so an
 // override only ever applies to the turn that actually asked for it).
 var languageOverridePhrases = []string{
-	"in english", "in portuguese", "in spanish", "in chinese",
-	"em inglês", "em português", "em espanhol", "em chinês",
-	"en inglés", "en portugués", "en español", "en chino",
+	"in english", "in portuguese", "in spanish", "in chinese", "in french",
+	"em inglês", "em português", "em espanhol", "em chinês", "em francês",
+	"en inglés", "en portugués", "en español", "en chino", "en francés",
+	// French phrasings, with and without accents -- someone typing quickly
+	// writes "en francais" as often as "en français".
+	"en français", "en francais", "en anglais", "en portugais", "en espagnol", "en chinois",
 }
 
 func promptRequestsExplicitLanguage(prompt string) bool {
