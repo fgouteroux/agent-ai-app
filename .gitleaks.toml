@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Test fixtures with fake credentials used to verify redaction."
+paths = [
+  '''pkg/plugin/secret_redaction_test\.go$''',
+]
+
+[[allowlists]]
+description = "Generated build output must not be scanned in local worktrees."
+paths = [
+  '''^dist/''',
+]

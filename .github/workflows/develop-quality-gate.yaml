@@ -124,7 +124,7 @@ jobs:
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./pkg/...
 
       - name: Secret scan
-        run: go run github.com/gitleaks/gitleaks/v8@latest detect --source . --no-git --redact --verbose
+        run: go run github.com/zricethezav/gitleaks/v8@latest detect --source . --no-git --redact --verbose
 
       - name: Frontend audit
         run: npm audit --omit=dev --audit-level=moderate
