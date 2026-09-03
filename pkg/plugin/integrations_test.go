@@ -78,9 +78,6 @@ func TestIntegrationsStatus_ReportsOKWhenLLMAppHealthy(t *testing.T) {
 	}
 }
 
-
-
-
 func TestIntegrationsStatus_FiltersOutEverythingWhenNothingInstalled(t *testing.T) {
 	t.Parallel()
 
