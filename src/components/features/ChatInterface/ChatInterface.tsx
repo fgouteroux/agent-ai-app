@@ -32,6 +32,7 @@ import { summarizePanelData } from '../../../services/panelData';
 import type { Message, ToolExecution } from '../../../types/llm.types';
 import { contextService, DataSourceContext, DashboardContext } from '../../../services/context';
 import { chatHistoryService, type ChatSession } from '../../../services/chatHistory';
+import { downloadSessionAsMarkdown } from '../../../services/chatExport';
 import { getQuickPrompts, saveQuickPrompt, type QuickPrompt } from '../../../services/quickPrompts';
 import { getLandingText, type ResponseLanguage } from '../../../services/landingText';
 import { truncateMessages } from '../../../services/truncation';
@@ -1044,6 +1045,23 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
 
 
 
+  // Downloads what is on screen, saved or not. A conversation is only
+  // persisted once a turn completes, so reading it back from history would
+  // miss the exchange the user is looking at -- which is usually the one
+  // they want to keep.
+  const handleDownloadConversation = () => {
+    const saved = currentSessionId ? chatHistoryService.getSession(currentSessionId) : undefined;
+    downloadSessionAsMarkdown({
+      id: saved?.id ?? 'current',
+      title: saved?.title ?? (messages.find((m) => m.role === 'user')?.content.slice(0, 60) || 'Conversation'),
+      messages,
+      createdAt: saved?.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+      agent: saved?.agent ?? selectedAgent,
+      agentLabel: saved?.agentLabel ?? activeAgentLabel,
+    });
+  };
+
   const handleStop = () => {
     resetAssistantReveal();
     if (abortControllerRef.current) {
@@ -1891,6 +1909,18 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
                   {!contextUsage.pending && selectedAgent !== 'generic' && ` (${contextUsage.tokens}/${contextUsage.maxTokens})`}
                 </div>
               )}
+              {messages.length > 0 && (
+                <button
+                  type="button"
+                  className={styles.historyButtonDiscreetInline}
+                  title="Download this conversation (Markdown)"
+                  aria-label="Download this conversation"
+                  onClick={handleDownloadConversation}
+                  data-testid="download-conversation-button"
+                >
+                  <Icon name="download-alt" size="lg" />
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.historyButtonDiscreetInline}
@@ -2377,6 +2407,12 @@ export const ChatInterface = ({ panelContext, onDismiss, sessionRef, responseLan
                     {new Date(session.updatedAt).toLocaleString()}
                   </div>
                 </div>
+                <Icon
+                  name="download-alt"
+                  className={styles.historyItemDownload}
+                  title="Download as Markdown"
+                  onClick={() => downloadSessionAsMarkdown(session)}
+                />
                 <Icon
                   name="trash-alt"
                   className={styles.historyItemDelete}
